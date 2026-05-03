@@ -1,0 +1,44 @@
+import { supabase } from "@services/supabase";
+
+const TABLE = "event_attendees";
+
+// Composite primary key (event_id, user_id) on the table prevents duplicate
+// joins at the database level — same guarantee as the Firestore composite ID.
+export async function joinEvent(eventId, uid) {
+  const { error } = await supabase
+    .from(TABLE)
+    .insert({ event_id: eventId, user_id: uid });
+  if (error) throw error;
+}
+
+export async function leaveEvent(eventId, uid) {
+  const { error } = await supabase
+    .from(TABLE)
+    .delete()
+    .eq("event_id", eventId)
+    .eq("user_id", uid);
+  if (error) throw error;
+}
+
+export async function isJoined(eventId, uid) {
+  const { count, error } = await supabase
+    .from(TABLE)
+    .select("event_id", { count: "exact", head: true })
+    .eq("event_id", eventId)
+    .eq("user_id", uid);
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
+// MVP: count on demand instead of maintaining a denormalised counter.
+// `head: true` skips returning rows — only the count comes back.
+// When this becomes too expensive, add an attendees_count column on events
+// plus an AFTER INSERT/DELETE trigger on event_attendees to maintain it.
+export async function fetchAttendeeCount(eventId) {
+  const { count, error } = await supabase
+    .from(TABLE)
+    .select("event_id", { count: "exact", head: true })
+    .eq("event_id", eventId);
+  if (error) throw error;
+  return count ?? 0;
+}

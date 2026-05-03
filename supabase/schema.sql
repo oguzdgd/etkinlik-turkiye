@@ -1,0 +1,268 @@
+-- Etkinlik Türkiye — Supabase schema
+--
+-- Bu dosyayı Supabase Dashboard → SQL Editor'da TEK SEFERDE çalıştır.
+-- Idempotent değildir; tabloları drop'layıp baştan yaratır.
+-- Mevcut veri varsa kaybolur — boş projede kullanılmak üzere yazılmıştır.
+
+-- =============================================================================
+-- TABLES
+-- =============================================================================
+
+-- profiles: auth.users tablosunun uygulama tarafındaki uzantısı.
+-- role buradan okunur — admin promosyonu bu tablodan yapılır.
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  display_name text,
+  role text not null default 'user' check (role in ('user', 'admin')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.events (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text not null,
+  category text not null,
+  type text not null check (type in ('online', 'in_person')),
+  city text,
+  location_text text,
+  online_url text,
+  lat double precision,
+  lng double precision,
+  starts_at timestamptz not null,
+  image_url text,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  moderated_at timestamptz
+);
+
+-- Mevcut veritabanına sütunları eklemek için (tablo zaten varsa):
+alter table public.events add column if not exists lat double precision;
+alter table public.events add column if not exists lng double precision;
+
+create index if not exists events_status_starts_at_idx
+  on public.events(status, starts_at);
+create index if not exists events_status_created_at_idx
+  on public.events(status, created_at desc);
+
+create table if not exists public.event_attendees (
+  event_id uuid not null references public.events(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  joined_at timestamptz not null default now(),
+  primary key (event_id, user_id)
+);
+
+create index if not exists event_attendees_user_id_idx
+  on public.event_attendees(user_id);
+
+create table if not exists public.favorites (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  event_id uuid not null references public.events(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, event_id)
+);
+
+create index if not exists favorites_event_id_idx
+  on public.favorites(event_id);
+
+-- =============================================================================
+-- HELPERS
+-- =============================================================================
+
+-- is_admin: RLS politikalarında admin kontrolü için yardımcı.
+-- security definer + sabit search_path ile güvenli sorgu.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists(
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
+-- =============================================================================
+-- TRIGGERS
+-- =============================================================================
+
+-- Yeni auth.users satırı yaratıldığında otomatik profil oluştur.
+-- display_name signup sırasında raw_user_meta_data'ya konabilir.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, display_name)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'display_name', '')
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- Owner kendi etkinliğinin status veya created_by alanını değiştiremesin.
+-- Sadece admin değiştirebilir. Bu trigger RLS UPDATE policy'sinin
+-- "USING/CHECK ile eski değer karşılaştırılamıyor" sınırlamasını çözer.
+create or replace function public.events_protect_immutable_fields()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    if new.status is distinct from old.status then
+      raise exception 'Sadece admin status değiştirebilir.';
+    end if;
+    if new.created_by is distinct from old.created_by then
+      raise exception 'created_by değiştirilemez.';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists events_protect_immutable on public.events;
+create trigger events_protect_immutable
+  before update on public.events
+  for each row execute function public.events_protect_immutable_fields();
+
+-- =============================================================================
+-- ROW LEVEL SECURITY
+-- =============================================================================
+
+alter table public.profiles enable row level security;
+alter table public.events enable row level security;
+alter table public.event_attendees enable row level security;
+alter table public.favorites enable row level security;
+
+-- profiles --------------------------------------------------------------------
+-- Kullanıcı kendi profilini okur, admin tüm profilleri okur.
+drop policy if exists "profiles_select" on public.profiles;
+create policy "profiles_select" on public.profiles
+  for select using (
+    auth.uid() = id or public.is_admin()
+  );
+
+-- Kullanıcı kendi profilini günceller; role değişimi trigger'da değil
+-- politika seviyesinde de korunur (admin promote'u SQL editor üzerinden yapılır).
+drop policy if exists "profiles_update_self" on public.profiles;
+create policy "profiles_update_self" on public.profiles
+  for update
+  using (auth.uid() = id)
+  with check (auth.uid() = id);
+
+-- events ----------------------------------------------------------------------
+-- approved → herkes okur (anonim dahil); pending/rejected → sahibi + admin.
+drop policy if exists "events_select" on public.events;
+create policy "events_select" on public.events
+  for select using (
+    status = 'approved'
+    or auth.uid() = created_by
+    or public.is_admin()
+  );
+
+-- Yeni etkinlik mecburen pending olarak doğar.
+drop policy if exists "events_insert" on public.events;
+create policy "events_insert" on public.events
+  for insert with check (
+    auth.uid() = created_by
+    and status = 'pending'
+  );
+
+-- Owner ve admin update edebilir; field-level koruma trigger'da.
+drop policy if exists "events_update" on public.events;
+create policy "events_update" on public.events
+  for update using (
+    auth.uid() = created_by or public.is_admin()
+  );
+
+drop policy if exists "events_delete" on public.events;
+create policy "events_delete" on public.events
+  for delete using (
+    auth.uid() = created_by or public.is_admin()
+  );
+
+-- event_attendees -------------------------------------------------------------
+-- Sayaç anonim ziyaretçilere de gösterildiğinden read public.
+drop policy if exists "attendees_select_public" on public.event_attendees;
+create policy "attendees_select_public" on public.event_attendees
+  for select using (true);
+
+drop policy if exists "attendees_insert_self" on public.event_attendees;
+create policy "attendees_insert_self" on public.event_attendees
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "attendees_delete_self" on public.event_attendees;
+create policy "attendees_delete_self" on public.event_attendees
+  for delete using (auth.uid() = user_id);
+
+-- favorites -------------------------------------------------------------------
+drop policy if exists "favorites_select_self" on public.favorites;
+create policy "favorites_select_self" on public.favorites
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "favorites_insert_self" on public.favorites;
+create policy "favorites_insert_self" on public.favorites
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "favorites_delete_self" on public.favorites;
+create policy "favorites_delete_self" on public.favorites
+  for delete using (auth.uid() = user_id);
+
+-- =============================================================================
+-- REALTIME
+-- =============================================================================
+
+-- AuthContext, profiles tablosunda kendi satırını dinler — admin promote
+-- edildiğinde Navbar/AdminRoute canlı olarak güncellensin diye.
+alter publication supabase_realtime add table public.profiles;
+
+-- =============================================================================
+-- STORAGE
+-- =============================================================================
+
+-- Bucket'ı bu SQL'le yaratıyoruz; Dashboard'da elle de yaratabilirsin.
+-- public = true → herkes URL üzerinden okuyabilir.
+insert into storage.buckets (id, name, public)
+values ('event-images', 'event-images', true)
+on conflict (id) do update set public = excluded.public;
+
+-- Bucket politikaları: herkes okur, sahibi kendi UID klasörüne yazar/siler.
+drop policy if exists "event_images_select" on storage.objects;
+create policy "event_images_select" on storage.objects
+  for select using (bucket_id = 'event-images');
+
+drop policy if exists "event_images_insert" on storage.objects;
+create policy "event_images_insert" on storage.objects
+  for insert with check (
+    bucket_id = 'event-images'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "event_images_update" on storage.objects;
+create policy "event_images_update" on storage.objects
+  for update using (
+    bucket_id = 'event-images'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "event_images_delete" on storage.objects;
+create policy "event_images_delete" on storage.objects
+  for delete using (
+    bucket_id = 'event-images'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
