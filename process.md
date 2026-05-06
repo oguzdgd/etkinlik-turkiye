@@ -102,7 +102,7 @@ Kendi data loading'i olan yeni route'a kendi `errorElement`'ini ver.
 
 ## Mevcut Durum (2026-05-06)
 
-MVP tamamlandı. Tüm planlanan özellikler (favorites, dashboard, useLeaveEvent) yazıldı ve Playwright ile test edildi.
+Ana sayfa etkinlik keşif sayfasına dönüştürüldü (arama + filtreler). Navbar dropdown yapısına geçildi. Profil sayfası eklendi.
 
 ---
 
@@ -175,3 +175,19 @@ MVP tamamlandı. Tüm planlanan özellikler (favorites, dashboard, useLeaveEvent
 - [x] `useLeaveEvent` hook'u — optimistik (isJoined + attendeeCount + userJoined cache günceller)
 - [x] EventDetailPage'de "etkinlikten ayrıl" — JoinButton zaten toggle olarak çalışıyor ("Katıldın · Ayrıl")
 - [x] Dashboard Katıldıklarım tab'ında her satırda "Ayrıl" butonu
+
+### Ana Sayfa Keşif + Navbar + Profil (2026-05-06)
+- [x] `fetchEventsPage` filtre desteği — search (ilike title), type (eq), city (ilike), category (eq)
+- [x] `useEvents` — filters parametresi + query key'e dahil (her filtre kombinasyonu ayrı cache)
+- [x] `EventFilters.jsx` — arama input, şehir input, kategori select, tür pill butonları
+- [x] `useDebounce` hook — `src/hooks/useDebounce.js`, 300ms gecikme
+- [x] `EventList` — filters prop eklendi
+- [x] `HomePage` — etkinlik keşif sayfası (filtre state + debounce + EventList)
+- [x] `/events` → `/` redirect (Navigate replace)
+- [x] `ROUTES.EVENTS` → `/`, `ROUTES.PROFILE` eklendi
+- [x] Navbar dropdown — giriş yapmamışsa Giriş/Kayıt butonları; giriş yapmışsa kullanıcı adı + dropdown
+- [x] Dropdown içeriği: Etkinlik Oluştur, Panelim, Profilim, Admin (admin rolüne göre), Çıkış yap
+- [x] `updateProfile` / `updatePassword` — authService'e eklendi (`supabase.auth.updateUser`)
+- [x] `useUpdateProfile` / `useUpdatePassword` hook'ları
+- [x] `ProfileForm.jsx` — initials avatar, display name düzenleme, şifre değiştirme
+- [x] `ProfilePage.jsx` — `/profile` ProtectedRoute altında

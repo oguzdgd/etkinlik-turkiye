@@ -8,3 +8,7 @@ export { useAuth } from "./hooks/useAuth";
 export { useLogin } from "./hooks/useLogin";
 export { useRegister } from "./hooks/useRegister";
 export { useLogout } from "./hooks/useLogout";
+export { useUpdateProfile } from "./hooks/useUpdateProfile";
+export { useUpdatePassword } from "./hooks/useUpdatePassword";
+
+export { default as ProfileForm } from "./components/ProfileForm";

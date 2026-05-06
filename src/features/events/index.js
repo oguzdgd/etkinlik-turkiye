@@ -4,6 +4,7 @@
 
 export { default as EventCard } from "./components/EventCard";
 export { default as EventList } from "./components/EventList";
+export { default as EventFilters } from "./components/EventFilters";
 export { default as JoinButton } from "./components/JoinButton";
 export { default as AttendeeCount } from "./components/AttendeeCount";
 export { default as EventCreateForm } from "./components/EventCreateForm";

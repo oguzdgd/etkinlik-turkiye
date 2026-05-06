@@ -2,7 +2,7 @@ import Spinner from "@components/ui/Spinner";
 import { useEvents } from "../hooks/useEvents";
 import EventCard from "./EventCard";
 
-export default function EventList({ pageSize = 12 }) {
+export default function EventList({ pageSize = 12, filters = {} }) {
   const {
     data,
     isLoading,
@@ -11,7 +11,7 @@ export default function EventList({ pageSize = 12 }) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useEvents({ pageSize });
+  } = useEvents({ pageSize, filters });
 
   if (isLoading) return <Spinner />;
   if (isError) {

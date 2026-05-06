@@ -30,6 +30,7 @@ export const ROUTES = Object.freeze({
   REGISTER: "/register",
   DASHBOARD: "/dashboard",
   ADMIN: "/admin",
-  EVENTS: "/events",
+  EVENTS: "/",
   EVENT_NEW: "/events/new",
+  PROFILE: "/profile",
 });

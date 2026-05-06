@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import MainLayout from "@components/layout/MainLayout";
 import RouteError from "@components/RouteError";
 import ProtectedRoute from "@components/guards/ProtectedRoute";
@@ -17,7 +17,7 @@ const router = createBrowserRouter(
         { path: "login", lazy: lazyPage(() => import("@pages/public/LoginPage")) },
         { path: "register", lazy: lazyPage(() => import("@pages/public/RegisterPage")) },
 
-        { path: "events", lazy: lazyPage(() => import("@pages/events/EventListPage")) },
+        { path: "events", element: <Navigate to="/" replace /> },
         { path: "events/map", lazy: lazyPage(() => import("@pages/events/MapPage")) },
         { path: "events/:eventId", lazy: lazyPage(() => import("@pages/events/EventDetailPage")) },
 
@@ -25,6 +25,7 @@ const router = createBrowserRouter(
           element: <ProtectedRoute />,
           children: [
             { path: "dashboard", lazy: lazyPage(() => import("@pages/user/DashboardPage")) },
+            { path: "profile", lazy: lazyPage(() => import("@pages/user/ProfilePage")) },
             { path: "events/new", lazy: lazyPage(() => import("@pages/events/EventCreatePage")) },
           ],
         },

@@ -28,3 +28,15 @@ export async function logout() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }
+
+export async function updateProfile({ displayName }) {
+  const { error } = await supabase.auth.updateUser({
+    data: { display_name: displayName },
+  });
+  if (error) throw error;
+}
+
+export async function updatePassword({ newPassword }) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}

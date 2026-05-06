@@ -6,17 +6,23 @@ const TABLE = "events";
 // Public listing — only "approved" events come back so this query works for
 // anonymous visitors too. Pagination is offset-based via .range(from, to);
 // the cursor is a numeric offset (consumed by useInfiniteQuery).
-export async function fetchEventsPage({ pageSize = 12, cursor = 0 } = {}) {
+export async function fetchEventsPage({ pageSize = 12, cursor = 0, filters = {} } = {}) {
   const from = cursor;
   const to = cursor + pageSize - 1;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from(TABLE)
     .select("*")
     .eq("status", EVENT_STATUS.APPROVED)
     .order("starts_at", { ascending: true })
     .range(from, to);
 
+  if (filters.search) query = query.ilike("title", `%${filters.search}%`);
+  if (filters.type && filters.type !== "all") query = query.eq("type", filters.type);
+  if (filters.city) query = query.ilike("city", `%${filters.city}%`);
+  if (filters.category) query = query.eq("category", filters.category);
+
+  const { data, error } = await query;
   if (error) throw error;
 
   return {
