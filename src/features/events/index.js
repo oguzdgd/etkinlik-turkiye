@@ -19,3 +19,6 @@ export { useCreateEvent } from "./hooks/useCreateEvent";
 export { usePendingEvents } from "./hooks/usePendingEvents";
 export { useModerateEvent } from "./hooks/useModerateEvent";
 export { useEventsForMap } from "./hooks/useEventsForMap";
+export { useUserEvents } from "./hooks/useUserEvents";
+export { useUserJoinedEvents } from "./hooks/useUserJoinedEvents";
+export { useLeaveEvent } from "./hooks/useLeaveEvent";

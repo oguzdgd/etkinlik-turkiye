@@ -1,4 +1,5 @@
 import { supabase } from "@services/supabase";
+import { toEvent } from "./eventsService";
 
 const TABLE = "event_attendees";
 
@@ -28,6 +29,18 @@ export async function isJoined(eventId, uid) {
     .eq("user_id", uid);
   if (error) throw error;
   return (count ?? 0) > 0;
+}
+
+// Events the user has joined, newest-join first.
+export async function fetchUserJoinedEvents(uid) {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("joined_at, events!inner(*)")
+    .eq("user_id", uid)
+    .order("joined_at", { ascending: false });
+
+  if (error) throw error;
+  return data.map((row) => toEvent(row.events));
 }
 
 // MVP: count on demand instead of maintaining a denormalised counter.

@@ -110,9 +110,21 @@ export async function setEventStatus(eventId, status) {
   if (error) throw error;
 }
 
+// User's own events — all statuses, newest first.
+export async function fetchUserEvents(uid) {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("*")
+    .eq("created_by", uid)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data.map(toEvent);
+}
+
 // Maps snake_case Postgres columns to the camelCase shape the UI consumes.
 // Keep this the only place that knows the column names.
-function toEvent(row) {
+export function toEvent(row) {
   return {
     id: row.id,
     title: row.title,

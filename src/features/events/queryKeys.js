@@ -10,4 +10,6 @@ export const eventKeys = {
   isJoined: (eventId, uid) => [...eventKeys.all, "isJoined", eventId, uid],
   pending: () => [...eventKeys.all, "pending"],
   map: () => [...eventKeys.all, "map"],
+  userEvents: (uid) => [...eventKeys.all, "userEvents", uid],
+  userJoined: (uid) => [...eventKeys.all, "userJoined", uid],
 };

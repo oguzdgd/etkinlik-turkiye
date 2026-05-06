@@ -100,9 +100,9 @@ Kendi data loading'i olan yeni route'a kendi `errorElement`'ini ver.
 
 ---
 
-## Mevcut Durum (2026-05-04)
+## Mevcut Durum (2026-05-06)
 
-Temel altyapı ve MVP özellikleri tamamlandı. Harita özelliği eklendi.
+MVP tamamlandı. Tüm planlanan özellikler (favorites, dashboard, useLeaveEvent) yazıldı ve Playwright ile test edildi.
 
 ---
 
@@ -157,17 +157,21 @@ Temel altyapı ve MVP özellikleri tamamlandı. Harita özelliği eklendi.
 ## Eksik / Yapılacaklar
 
 ### Favorites Feature
-- [ ] `favoritesService.js` — toggleFavorite, fetchUserFavorites
-- [ ] `useFavorites`, `useToggleFavorite` hookları
-- [ ] `FavoriteButton` bileşeni (EventCard'a entegre)
-- [ ] `queryKeys` genişletmesi (favoriteKeys)
-- [ ] DashboardPage'de favori etkinlikler listesi
+- [x] `favoritesService.js` — fetchUserFavoriteIds, addFavorite, removeFavorite
+- [x] `useFavorites` — kullanıcının favori event_id'lerini Set olarak döner
+- [x] `useToggleFavorite` — optimistik toggle (Set üzerinde)
+- [x] `FavoriteButton` bileşeni (EventCard image'ının sağ üstünde)
+- [x] `favoriteKeys` — `src/features/favorites/queryKeys.js`
+- [x] EventCard entegrasyonu
+- [x] DashboardPage'de favori etkinlikler listesi
 
 ### Kullanıcı Dashboard (`/dashboard`)
-- [ ] Kullanıcının kendi etkinlikleri (pending/approved/rejected durumlarıyla)
-- [ ] Favori etkinlikler listesi
-- [ ] Katıldığı etkinlikler listesi
+- [x] Kullanıcının kendi etkinlikleri (pending/approved/rejected durumlarıyla) — `useUserEvents`
+- [x] Favori etkinlikler listesi — `useUserFavoriteEvents`
+- [x] Katıldığı etkinlikler listesi — `useUserJoinedEvents`
+- [x] 3 tab'lı UI: Etkinliklerim / Favorilerim / Katıldıklarım
 
 ### Küçük Eksikler
-- [ ] `useLeaveEvent` hook'u (`attendeesService`'te `leaveEvent` var ama hook yok)
-- [ ] EventDetailPage'de "etkinlikten ayrıl" butonu
+- [x] `useLeaveEvent` hook'u — optimistik (isJoined + attendeeCount + userJoined cache günceller)
+- [x] EventDetailPage'de "etkinlikten ayrıl" — JoinButton zaten toggle olarak çalışıyor ("Katıldın · Ayrıl")
+- [x] Dashboard Katıldıklarım tab'ında her satırda "Ayrıl" butonu
