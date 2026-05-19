@@ -40,6 +40,8 @@ create table if not exists public.events (
 -- Mevcut veritabanına sütunları eklemek için (tablo zaten varsa):
 alter table public.events add column if not exists lat double precision;
 alter table public.events add column if not exists lng double precision;
+alter table public.events add column if not exists source text not null default 'manual' check (source in ('manual', 'email_import'));
+alter table public.events add column if not exists email_message_id text unique;
 
 create index if not exists events_status_starts_at_idx
   on public.events(status, starts_at);

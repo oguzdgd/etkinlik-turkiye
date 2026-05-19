@@ -8,6 +8,7 @@ dist-ssr
 .env.*
 .env.local
 !.env.example
+.env.example
 
 # editors
 .vscode/*
@@ -24,4 +25,8 @@ pnpm-debug.log*
 *.timestamp-*.mjs
 
 # claude code local settings
+CLAUDE.md
 .claude/
+
+# playwright mcp — screenshots, console logs, tool artifacts
+.playwright-mcp/

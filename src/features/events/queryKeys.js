@@ -12,4 +12,5 @@ export const eventKeys = {
   map: () => [...eventKeys.all, "map"],
   userEvents: (uid) => [...eventKeys.all, "userEvents", uid],
   userJoined: (uid) => [...eventKeys.all, "userJoined", uid],
+  calendar: (year, month) => [...eventKeys.all, "calendar", year, month],
 };

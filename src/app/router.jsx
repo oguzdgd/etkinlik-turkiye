@@ -17,6 +17,10 @@ const router = createBrowserRouter(
         { path: "login", lazy: lazyPage(() => import("@pages/public/LoginPage")) },
         { path: "register", lazy: lazyPage(() => import("@pages/public/RegisterPage")) },
 
+        { path: "categories", lazy: lazyPage(() => import("@pages/public/CategoriesPage")) },
+        { path: "cities", lazy: lazyPage(() => import("@pages/public/CitiesPage")) },
+        { path: "calendar", lazy: lazyPage(() => import("@pages/public/CalendarPage")) },
+
         { path: "events", element: <Navigate to="/" replace /> },
         { path: "events/map", lazy: lazyPage(() => import("@pages/events/MapPage")) },
         { path: "events/:eventId", lazy: lazyPage(() => import("@pages/events/EventDetailPage")) },

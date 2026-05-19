@@ -116,6 +116,34 @@ export async function setEventStatus(eventId, status) {
   if (error) throw error;
 }
 
+// Lightweight stats for the hero section.
+export async function fetchEventStats() {
+  const { count, error } = await supabase
+    .from(TABLE)
+    .select("*", { count: "exact", head: true })
+    .eq("status", EVENT_STATUS.APPROVED);
+
+  if (error) throw error;
+  return { eventCount: count ?? 0 };
+}
+
+// Approved events for a given month — used by the calendar view.
+export async function fetchEventsForCalendar(year, month) {
+  const from = new Date(year, month, 1).toISOString();
+  const to = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("id, title, starts_at, type, city, category")
+    .eq("status", EVENT_STATUS.APPROVED)
+    .gte("starts_at", from)
+    .lte("starts_at", to)
+    .order("starts_at");
+
+  if (error) throw error;
+  return data.map(toEvent);
+}
+
 // User's own events — all statuses, newest first.
 export async function fetchUserEvents(uid) {
   const { data, error } = await supabase

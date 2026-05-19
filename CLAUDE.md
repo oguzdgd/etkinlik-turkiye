@@ -84,3 +84,29 @@ Always use: `@app` `@pages` `@features` `@services` `@store` `@components` `@hoo
 ### Styling
 
 Tailwind v4 via `@tailwindcss/vite`. No `tailwind.config.js` or `postcss.config.js` — config lives in `src/index.css`. Don't add v3-style config files.
+
+Design system is **black & white / zinc palette only** — no color accents (no indigo, blue, green, etc. on new UI). Interactive elements: `bg-black text-white` (active) / `border-zinc-200` (default).
+
+Custom CSS classes in `src/index.css`:
+| Class | Purpose |
+|---|---|
+| `display-tight` | Display headings — tight letter-spacing |
+| `tabular` | Tabular numbers |
+| `nav-blur` | Backdrop blur for navbar |
+| `stripe-placeholder` | Light stripe image fallback |
+| `stripe-placeholder-dark` | Dark stripe image fallback |
+| `card-hover` | translateY(-2px) lift on hover |
+| `shadow-card` | Subtle card shadow |
+| `shadow-lift` | Stronger hover shadow |
+| `focus-ring` | Black 2px focus outline |
+| `clamp-2` | 2-line text clamp |
+| `hero-full-bleed` | Escapes `max-w-6xl` container + `px-4/px-6` padding → full 100vw width |
+
+### Performance patterns
+
+- Filter objects passed to `useDebounce` must be wrapped in `useMemo` at the call site to prevent reference-churn resetting the debounce timer.
+- `pages.flatMap()` results in `EventList` are memoized with `useMemo(…, [data])`.
+- `EventCard` is wrapped with `React.memo` — prevents re-render of all cards when `isFetchingNextPage` changes.
+- Heavy computations inside page components (e.g., calendar grid cells) use `useMemo` with correct deps.
+- All images use `loading="lazy"` except LCP candidates.
+- Leaflet (190 kB) is in its own chunk via lazy `MapPage` route — never in the main bundle.

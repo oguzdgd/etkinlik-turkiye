@@ -1,20 +1,78 @@
-import { useState } from "react";
-import { EventList, EventFilters } from "@features/events";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+import { EventList, EventFilters, useEventStats } from "@features/events";
 import { useDebounce } from "@hooks/useDebounce";
+import { usePageTitle } from "@hooks/usePageTitle";
+import { EVENT_CATEGORIES } from "@lib/constants";
+
+const CITY_COUNT = 7; // İstanbul, Ankara, İzmir, Bursa, Antalya, Eskişehir + Online
 
 export default function HomePage() {
+  usePageTitle(null);
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
-  const [type, setType] = useState("all");
-  const [city, setCity] = useState("");
-  const [category, setCategory] = useState("");
+  const [type, setType] = useState(searchParams.get("type") === "online" ? "online" : "all");
+  const [city, setCity] = useState(searchParams.get("city") || "");
+  const [category, setCategory] = useState(searchParams.get("category") || "");
 
-  const debouncedFilters = useDebounce({ search, type, city, category }, 300);
+  const rawFilters = useMemo(
+    () => ({ search, type, city, category }),
+    [search, type, city, category],
+  );
+  const debouncedFilters = useDebounce(rawFilters, 300);
+  const { data: stats } = useEventStats();
 
   return (
-    <section className="space-y-6">
+    <div className="space-y-10">
+      {/* Hero — tam ekran, negative margin ile container padding'den çıkıyor */}
+      <section className="hero-full-bleed stripe-placeholder-dark relative -mt-8 flex min-h-[calc(100vh-4rem)] flex-col overflow-hidden bg-black text-white">
+        <div className="relative flex flex-1 flex-col justify-between px-8 py-16 md:px-14 md:py-20">
+          {/* Top meta row */}
+          <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">
+            <span className="inline-flex items-center gap-2">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inset-0 animate-ping rounded-full bg-white opacity-60" />
+                <span className="relative h-1.5 w-1.5 rounded-full bg-white" />
+              </span>
+              Canlı
+            </span>
+            <span className="text-zinc-700">/</span>
+            <span>Türkiye'nin etkinlik platformu</span>
+          </div>
+
+          {/* Main headline */}
+          <div>
+            <h1 className="display-tight max-w-4xl text-[72px] font-light leading-[0.9] md:text-[110px] lg:text-[130px]">
+              Etkinlikleri<br />
+              <span className="font-semibold">Keşfet</span>
+              <span className="text-zinc-600">.</span>
+            </h1>
+            <p className="mt-8 max-w-xl text-[17px] leading-relaxed text-zinc-400">
+              Hackathon'lar, workshop'lar, networking etkinlikleri —
+              geliştiriciler için tek bir yerde.
+            </p>
+          </div>
+
+          {/* Bottom stats */}
+          <div className="grid grid-cols-3 gap-8 border-t border-zinc-800 pt-8 sm:max-w-sm">
+            <Stat
+              n={stats ? stats.eventCount : "—"}
+              label="Etkinlik"
+            />
+            <Stat n={EVENT_CATEGORIES.length} label="Kategori" />
+            <Stat n={CITY_COUNT} label="Şehir" />
+          </div>
+        </div>
+      </section>
+
+      {/* Section label */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Etkinlik Türkiye</h1>
-        <p className="mt-1 text-gray-500">Yakındaki etkinlikleri keşfet.</p>
+        <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+          ↳ Listeleniyor
+        </div>
+        <h2 className="display-tight text-[28px] font-light text-zinc-900">
+          Yaklaşan etkinlikler<span className="text-zinc-400">.</span>
+        </h2>
       </div>
 
       <EventFilters
@@ -29,6 +87,17 @@ export default function HomePage() {
       />
 
       <EventList filters={debouncedFilters} pageSize={12} />
-    </section>
+    </div>
+  );
+}
+
+function Stat({ n, label }) {
+  return (
+    <div>
+      <div className="display-tight tabular text-[36px] font-light">{n}</div>
+      <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+        {label}
+      </div>
+    </div>
   );
 }

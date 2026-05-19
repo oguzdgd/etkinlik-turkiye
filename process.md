@@ -100,9 +100,11 @@ Kendi data loading'i olan yeni route'a kendi `errorElement`'ini ver.
 
 ---
 
-## Mevcut Durum (2026-05-06)
+## Mevcut Durum (2026-05-08)
 
-Ana sayfa etkinlik keşif sayfasına dönüştürüldü (arama + filtreler). Navbar dropdown yapısına geçildi. Profil sayfası eklendi.
+**Tasarım sistemi uygulandı.** Siyah-beyaz/zinc palette, özel CSS sınıfları, tam ekran hero. Ana sayfa, Kategoriler, Şehirler, Takvim sayfaları tamamlandı. Tüm bundle performans optimizasyonları yapıldı.
+
+Email import pipeline kuruldu: Gmail OAuth2 → Groq (Llama 3.3-70b) → Supabase pending events. Cron her 6 saatte çalışıyor. Test aşamasında — dedicated etkinlik maili açılınca production'a geçecek.
 
 ---
 
@@ -144,7 +146,7 @@ Ana sayfa etkinlik keşif sayfasına dönüştürüldü (arama + filtreler). Nav
 
 ### Router
 - [x] `createBrowserRouter` + `route.lazy()` + `lazyPage` adapter
-- [x] Rotalar: `/`, `/login`, `/register`, `/events`, `/events/map`, `/events/:eventId`, `/dashboard`, `/events/new`, `/admin`
+- [x] Rotalar: `/`, `/login`, `/register`, `/categories`, `/cities`, `/calendar`, `/events`, `/events/map`, `/events/:eventId`, `/dashboard`, `/profile`, `/events/new`, `/admin`
 
 ### Supabase Schema
 - [x] 4 tablo: `profiles`, `events`, `event_attendees`, `favorites`
@@ -191,3 +193,41 @@ Ana sayfa etkinlik keşif sayfasına dönüştürüldü (arama + filtreler). Nav
 - [x] `useUpdateProfile` / `useUpdatePassword` hook'ları
 - [x] `ProfileForm.jsx` — initials avatar, display name düzenleme, şifre değiştirme
 - [x] `ProfilePage.jsx` — `/profile` ProtectedRoute altında
+
+### Tasarım Sistemi + Yeni Sayfalar (2026-05-08)
+
+**Design system:**
+- [x] Siyah-beyaz / zinc palette — tüm renk aksanlar kaldırıldı
+- [x] `src/index.css` — özel sınıflar: `display-tight`, `tabular`, `nav-blur`, `stripe-placeholder`, `stripe-placeholder-dark`, `card-hover`, `shadow-card`, `shadow-lift`, `focus-ring`, `clamp-2`, `hero-full-bleed`
+- [x] `Navbar.jsx` — sticky + `nav-blur`, "ET" monogram, 5 nav linki (Keşfet, Kategoriler, Şehirler, Takvim, Harita), zengin kullanıcı dropdown
+- [x] `MainLayout.jsx` — Footer 4 sütun grid + B&W logo, `overflow-x-hidden` (hero bleed için)
+- [x] `EventCard.jsx` — `rounded-2xl`, `shadow-card`, `card-hover`, stripe placeholder, konum chip, outlined kategori badge
+- [x] `EventFilters.jsx` — search + pin icon, `rounded-xl` input, siyah aktif pill butonlar
+- [x] `EventList.jsx` — dashed border empty state, spinner-in-button load more
+- [x] `FavoriteButton.jsx` — `bg-black/white` toggle, `rounded-full`
+
+**Hero:**
+- [x] `hero-full-bleed` CSS sınıfı — `width: 100vw` + `calc()` ile hem `px-4/px-6` hem `max-w-6xl` (72rem) container'dan kaçar
+- [x] `HomePage` hero'su tam genişlik (`-mt-8 hero-full-bleed`), tam yükseklik (`min-h-[calc(100vh-4rem)]`)
+- [x] Hero stats gerçek veri: `useEventStats` (Supabase count), `EVENT_CATEGORIES.length`, `CITY_COUNT=7`
+
+**Yeni servisler/hooklar:**
+- [x] `fetchEventStats` — approved etkinlik sayısı (HEAD isteği, veri döndürmez)
+- [x] `useEventStats` — `staleTime: 5dk`, hero stats için
+- [x] `fetchEventsForCalendar(year, month)` — belirli ayın approved etkinlikleri
+- [x] `useEventsForCalendar(year, month)` — takvim sayfası için
+- [x] `eventKeys.calendar(year, month)` — query key
+
+**Yeni sayfalar:**
+- [x] `CategoriesPage.jsx` (`/categories`) — EVENT_CATEGORIES editorial grid, açıklama blurb'ler, `/?category=X` linkleri
+- [x] `CitiesPage.jsx` (`/cities`) — 7 şehir (İST/ANK/İZM/BUR/AYT/ESK/ONL), stripe-placeholder cover, `/?city=X` linkleri
+- [x] `CalendarPage.jsx` (`/calendar`) — gerçek Supabase verisi, Pazartesi-başlangıçlı grid, gün seçim paneli, `useMemo` eventsByDate + cells
+- [x] Router: `/categories`, `/cities`, `/calendar` rotaları eklendi
+
+### Performans Optimizasyonları (2026-05-08)
+- [x] `HomePage` — filter objesi `useMemo` ile sarıldı (debounce timer'ın stats yüklemesinde sıfırlanması engellendi)
+- [x] `EventList` — `pages.flatMap()` `useMemo(…,[data])` ile memoize edildi
+- [x] `EventCard` — `React.memo` ile sarıldı (`isFetchingNextPage` değişiminde 12 kartın gereksiz re-render'ı engellendi)
+- [x] `CalendarPage` — `cells` array `useMemo(…,[year,month])` ile memoize edildi (gün seçimlerinde gereksiz ~42 eleman yeniden hesaplama engellendi)
+- [x] `EventDetailPage` — hero image'a `loading="lazy"` eklendi
+- [x] Bundle analizi: Leaflet 190 kB ayrı chunk'ta (MapPage lazy), ana bundle 135 kB gzip — temiz

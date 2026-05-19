@@ -1,43 +1,79 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { EVENT_TYPE } from "@lib/constants";
 import { formatEventDate } from "../lib/format";
 import { FavoriteButton } from "@features/favorites";
 
-export default function EventCard({ event }) {
-  const location = event.type === EVENT_TYPE.ONLINE ? "Online" : event.city;
+const EventCard = memo(function EventCard({ event }) {
+  const isOnline = event.type === EVENT_TYPE.ONLINE;
+  const location = isOnline ? "Online" : event.city;
 
   return (
     <Link
       to={`/events/${event.id}`}
-      className="group flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition hover:border-gray-300 hover:shadow-sm"
+      className="card-hover shadow-card group block overflow-hidden rounded-2xl border border-zinc-200 bg-white"
     >
-      <div className="relative">
+      {/* Cover */}
+      <div className="relative h-44 overflow-hidden">
         {event.imageURL ? (
           <img
             src={event.imageURL}
             alt=""
             loading="lazy"
-            className="h-40 w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
-          <div className="h-40 w-full bg-gradient-to-br from-gray-100 to-gray-200" />
+          <div className="stripe-placeholder absolute inset-0 grid place-items-center">
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-400">
+              {event.category}
+            </span>
+          </div>
         )}
-        <div className="absolute right-2 top-2">
+
+        {/* Favorite */}
+        <div className="absolute right-3 top-3">
           <FavoriteButton eventId={event.id} />
+        </div>
+
+        {/* Location chip */}
+        <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/90 px-2.5 py-1 text-[11.5px] text-zinc-800 backdrop-blur">
+          {isOnline ? (
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <circle cx="12" cy="12" r="9" />
+              <path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18" />
+            </svg>
+          ) : (
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Z" />
+              <circle cx="12" cy="9" r="2.5" />
+            </svg>
+          )}
+          <span className="font-medium">{location}</span>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          {event.category} · {location}
+      {/* Body */}
+      <div className="p-5">
+        <div className="mb-3">
+          <span className="inline-flex h-6 items-center rounded-full border border-zinc-200 px-2.5 font-mono text-[10.5px] uppercase tracking-[0.14em] text-zinc-700">
+            {event.category}
+          </span>
         </div>
-        <h3 className="line-clamp-2 text-base font-semibold text-gray-900 group-hover:text-gray-700">
+
+        <h3 className="clamp-2 text-[17px] font-medium leading-snug tracking-tight text-zinc-900 group-hover:text-black">
           {event.title}
         </h3>
-        <div className="mt-auto pt-2 text-sm text-gray-600">
-          {formatEventDate(event.startsAt)}
+
+        <div className="mt-5 flex items-center gap-2 border-t border-zinc-100 pt-4 text-[12.5px] text-zinc-600">
+          <svg className="h-3.5 w-3.5 shrink-0 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <rect x="3.5" y="5" width="17" height="15" rx="2" />
+            <path d="M3.5 10h17M8 3v4M16 3v4" />
+          </svg>
+          <span className="tabular">{formatEventDate(event.startsAt)}</span>
         </div>
       </div>
     </Link>
   );
-}
+});
+
+export default EventCard;

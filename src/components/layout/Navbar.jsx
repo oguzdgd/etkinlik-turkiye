@@ -3,139 +3,244 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth, useLogout } from "@features/auth";
 import { ROLES, ROUTES } from "@lib/constants";
 
-const navLinkClass = ({ isActive }) =>
-  [
-    "rounded px-3 py-1.5 text-sm transition-colors",
-    isActive ? "font-semibold text-gray-900" : "text-gray-600 hover:text-gray-900",
-  ].join(" ");
-
 export default function Navbar() {
   const { user, role } = useAuth();
   const { mutate: logout } = useLogout();
-  const [isOpen, setIsOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const dropdownRef = useRef(null);
   const location = useLocation();
 
-  // Rota değişince dropdown kapansın
+  // Close everything on navigation
   useEffect(() => {
-    setIsOpen(false);
+    setDropdownOpen(false);
+    setMobileOpen(false);
   }, [location.pathname]);
 
-  // Dışarı tıklayınca kapat
+  // Close user dropdown on outside click
   useEffect(() => {
-    function handleClick(e) {
+    const onDoc = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsOpen(false);
+        setDropdownOpen(false);
       }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
   }, []);
-
-  function handleKeyDown(e) {
-    if (e.key === "Escape") setIsOpen(false);
-  }
 
   const initials = user
     ? (user.displayName || user.email || "?")
-        .split(" ")
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
+        .split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
     : "";
 
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        {/* Sol */}
-        <div className="flex items-center gap-1">
-          <Link
-            to="/"
-            className="mr-2 text-lg font-bold tracking-tight text-gray-900"
-          >
-            Etkinlik Türkiye
+    <header className="sticky top-0 z-40 bg-white/80 nav-blur border-b border-zinc-200">
+      {/* Main bar */}
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+
+        {/* Left: logo + desktop nav */}
+        <div className="flex items-center gap-8">
+          <Link to="/" className="focus-ring inline-flex items-center gap-2.5 rounded-md">
+            <span className="grid h-7 w-7 place-items-center rounded-md bg-black text-white">
+              <span className="font-mono text-[11px] font-medium">ET</span>
+            </span>
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-[15px] font-semibold tracking-tight text-zinc-900">Etkinlik</span>
+              <span className="text-[15px] font-light tracking-tight text-zinc-500">Türkiye</span>
+            </span>
           </Link>
-          <NavLink to="/events/map" className={navLinkClass}>
-            Harita
-          </NavLink>
+
+          <nav className="hidden items-center gap-1 md:flex">
+            <NavItem to="/">Keşfet</NavItem>
+            <NavItem to="/categories">Kategoriler</NavItem>
+            <NavItem to="/cities">Şehirler</NavItem>
+            <NavItem to="/calendar">Takvim</NavItem>
+            <NavItem to="/events/map">Harita</NavItem>
+          </nav>
         </div>
 
-        {/* Sağ */}
-        <nav aria-label="Kullanıcı menüsü">
-          {user ? (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                type="button"
-                onClick={() => setIsOpen((o) => !o)}
-                onKeyDown={handleKeyDown}
-                className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-                aria-expanded={isOpen}
-                aria-haspopup="true"
-              >
-                <span className="hidden sm:inline">
-                  {user.displayName || user.email}
-                </span>
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-xs font-semibold text-white sm:hidden">
-                  {initials}
-                </span>
-                <svg
-                  className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {isOpen && (
-                <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                  <DropdownLink to={ROUTES.EVENT_NEW}>Etkinlik Oluştur</DropdownLink>
-                  <DropdownLink to={ROUTES.DASHBOARD}>Panelim</DropdownLink>
-                  <DropdownLink to={ROUTES.PROFILE}>Profilim</DropdownLink>
-                  {role === ROLES.ADMIN && (
-                    <DropdownLink to={ROUTES.ADMIN}>Admin Paneli</DropdownLink>
-                  )}
-                  <hr className="my-1 border-gray-100" />
-                  <button
-                    type="button"
-                    onClick={() => logout()}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
-                  >
-                    Çıkış yap
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
+        {/* Right: auth + hamburger */}
+        <div className="flex items-center gap-2">
+          {/* Desktop auth */}
+          {!user ? (
+            <div className="hidden items-center gap-2 sm:flex">
               <NavLink
                 to={ROUTES.LOGIN}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                className="focus-ring inline-flex h-9 items-center rounded-lg border border-zinc-300 px-4 text-[13.5px] font-medium text-zinc-900 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
               >
                 Giriş yap
               </NavLink>
               <NavLink
                 to={ROUTES.REGISTER}
-                className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 transition"
+                className="focus-ring inline-flex h-9 items-center rounded-lg bg-black px-4 text-[13.5px] font-medium text-white transition-colors hover:bg-zinc-800"
               >
                 Kayıt ol
               </NavLink>
             </div>
+          ) : (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((o) => !o)}
+                className="focus-ring flex h-9 items-center gap-2 rounded-full pl-1 pr-2.5 transition-colors hover:bg-zinc-100"
+                aria-expanded={dropdownOpen}
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-zinc-900 text-[11px] font-medium tracking-wide text-white">
+                  {initials}
+                </span>
+                <span className="hidden max-w-[120px] truncate text-[13.5px] font-medium text-zinc-900 sm:block">
+                  {user.displayName || user.email?.split("@")[0]}
+                </span>
+                <svg
+                  className={`h-4 w-4 text-zinc-500 transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+
+              {dropdownOpen && (
+                <div className="shadow-lift absolute right-0 top-12 w-64 overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                  <div className="border-b border-zinc-100 px-4 py-3">
+                    <div className="text-[13.5px] font-medium text-zinc-900">
+                      {user.displayName || "Kullanıcı"}
+                    </div>
+                    <div className="truncate text-[12px] text-zinc-500">{user.email}</div>
+                  </div>
+                  <div className="py-1">
+                    <DropItem to={ROUTES.EVENT_NEW}>Etkinlik Oluştur</DropItem>
+                    <DropItem to={ROUTES.DASHBOARD}>Panelim</DropItem>
+                    <DropItem to={ROUTES.PROFILE}>Profilim</DropItem>
+                    {role === ROLES.ADMIN && (
+                      <DropItem to={ROUTES.ADMIN}>Admin Paneli</DropItem>
+                    )}
+                  </div>
+                  <div className="border-t border-zinc-100 py-1">
+                    <button
+                      type="button"
+                      onClick={() => logout()}
+                      className="w-full px-4 py-2 text-left text-[13px] text-zinc-700 hover:bg-zinc-50"
+                    >
+                      Çıkış yap
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
-        </nav>
+
+          {/* Mobile hamburger */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label={mobileOpen ? "Menüyü kapat" : "Menüyü aç"}
+            aria-expanded={mobileOpen}
+            className="focus-ring md:hidden grid h-9 w-9 place-items-center rounded-lg text-zinc-700 transition-colors hover:bg-zinc-100"
+          >
+            {mobileOpen ? (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile menu panel */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-zinc-200 bg-white">
+          <nav className="px-4 py-3 space-y-0.5">
+            <MobileNavItem to="/">Keşfet</MobileNavItem>
+            <MobileNavItem to="/categories">Kategoriler</MobileNavItem>
+            <MobileNavItem to="/cities">Şehirler</MobileNavItem>
+            <MobileNavItem to="/calendar">Takvim</MobileNavItem>
+            <MobileNavItem to="/events/map">Harita</MobileNavItem>
+          </nav>
+
+          {!user ? (
+            <div className="border-t border-zinc-100 px-4 py-3 flex gap-2">
+              <NavLink
+                to={ROUTES.LOGIN}
+                className="flex-1 text-center rounded-lg border border-zinc-300 py-2.5 text-[13.5px] font-medium text-zinc-900"
+              >
+                Giriş yap
+              </NavLink>
+              <NavLink
+                to={ROUTES.REGISTER}
+                className="flex-1 text-center rounded-lg bg-black py-2.5 text-[13.5px] font-medium text-white"
+              >
+                Kayıt ol
+              </NavLink>
+            </div>
+          ) : (
+            <div className="border-t border-zinc-100 px-4 py-3 space-y-0.5">
+              <MobileNavItem to={ROUTES.EVENT_NEW}>Etkinlik Oluştur</MobileNavItem>
+              <MobileNavItem to={ROUTES.DASHBOARD}>Panelim</MobileNavItem>
+              <MobileNavItem to={ROUTES.PROFILE}>Profilim</MobileNavItem>
+              {role === ROLES.ADMIN && (
+                <MobileNavItem to={ROUTES.ADMIN}>Admin Paneli</MobileNavItem>
+              )}
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="w-full rounded-lg px-3 py-2.5 text-left text-[14px] text-zinc-700 hover:bg-zinc-50"
+              >
+                Çıkış yap
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }
 
-function DropdownLink({ to, children }) {
+function NavItem({ to, children }) {
   return (
     <NavLink
       to={to}
-      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+      end
+      className={({ isActive }) =>
+        `focus-ring relative rounded px-3 py-2 text-[13.5px] tracking-tight transition-colors
+         ${isActive ? "font-medium text-zinc-900" : "text-zinc-500 hover:text-zinc-900"}`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          {children}
+          {isActive && (
+            <span className="absolute -bottom-[17px] left-3 right-3 h-px bg-black" />
+          )}
+        </>
+      )}
+    </NavLink>
+  );
+}
+
+function MobileNavItem({ to, children }) {
+  return (
+    <NavLink
+      to={to}
+      end
+      className={({ isActive }) =>
+        `block rounded-lg px-3 py-2.5 text-[14px] transition-colors
+         ${isActive ? "bg-zinc-100 font-medium text-zinc-900" : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"}`
+      }
+    >
+      {children}
+    </NavLink>
+  );
+}
+
+function DropItem({ to, children }) {
+  return (
+    <NavLink
+      to={to}
+      className="flex items-center px-4 py-2 text-[13px] text-zinc-700 hover:bg-zinc-50"
     >
       {children}
     </NavLink>

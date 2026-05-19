@@ -14,7 +14,11 @@ export default function PendingEventList() {
     );
   }
   if (!data || data.length === 0) {
-    return <p className="text-sm text-gray-600">Onay bekleyen etkinlik yok.</p>;
+    return (
+      <div className="grid place-items-center rounded-2xl border border-dashed border-zinc-300 py-16 text-center">
+        <p className="text-[14px] text-zinc-500">Onay bekleyen etkinlik yok.</p>
+      </div>
+    );
   }
 
   return (

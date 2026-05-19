@@ -11,37 +11,38 @@ export default function PendingEventRow({ event }) {
   const moderating = isPending && variables?.eventId === event.id;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row">
+    <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-5 sm:flex-row">
       {event.imageURL ? (
         <img
           src={event.imageURL}
           alt=""
-          className="h-24 w-full rounded-md object-cover sm:w-32"
+          loading="lazy"
+          className="h-24 w-full rounded-xl object-cover sm:w-32"
         />
       ) : (
-        <div className="h-24 w-full rounded-md bg-gradient-to-br from-gray-100 to-gray-200 sm:w-32" />
+        <div className="stripe-placeholder h-24 w-full rounded-xl sm:w-32" />
       )}
 
-      <div className="flex flex-1 flex-col gap-1">
-        <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <div className="flex flex-1 flex-col gap-1 min-w-0">
+        <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-zinc-500">
           {event.category} · {location}
         </div>
         <Link
           to={`/events/${event.id}`}
-          className="text-base font-semibold text-gray-900 hover:underline"
+          className="truncate text-[15px] font-medium text-zinc-900 hover:underline"
         >
           {event.title}
         </Link>
-        <p className="text-sm text-gray-600">{formatEventDate(event.startsAt)}</p>
-        <p className="line-clamp-2 text-sm text-gray-700">{event.description}</p>
+        <p className="text-[12.5px] text-zinc-500">{formatEventDate(event.startsAt)}</p>
+        <p className="clamp-2 mt-1 text-[13px] leading-relaxed text-zinc-600">{event.description}</p>
       </div>
 
-      <div className="flex flex-row gap-2 sm:flex-col sm:justify-center">
+      <div className="flex flex-row gap-2 sm:flex-col sm:justify-center sm:items-end">
         <button
           type="button"
           onClick={() => mutate({ eventId: event.id, status: EVENT_STATUS.APPROVED })}
           disabled={moderating}
-          className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
+          className="focus-ring h-9 rounded-lg bg-black px-4 text-[12.5px] font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50"
         >
           Onayla
         </button>
@@ -49,7 +50,7 @@ export default function PendingEventRow({ event }) {
           type="button"
           onClick={() => mutate({ eventId: event.id, status: EVENT_STATUS.REJECTED })}
           disabled={moderating}
-          className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+          className="focus-ring h-9 rounded-lg border border-zinc-300 bg-white px-4 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50 disabled:opacity-50"
         >
           Reddet
         </button>
