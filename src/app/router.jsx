@@ -31,6 +31,7 @@ const router = createBrowserRouter(
             { path: "dashboard", lazy: lazyPage(() => import("@pages/user/DashboardPage")) },
             { path: "profile", lazy: lazyPage(() => import("@pages/user/ProfilePage")) },
             { path: "events/new", lazy: lazyPage(() => import("@pages/events/EventCreatePage")) },
+            { path: "events/:eventId/edit", lazy: lazyPage(() => import("@pages/events/EventEditPage")) },
           ],
         },
 

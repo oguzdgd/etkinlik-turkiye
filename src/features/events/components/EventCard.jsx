@@ -1,12 +1,13 @@
 import { memo } from "react";
 import { Link } from "react-router-dom";
 import { EVENT_TYPE } from "@lib/constants";
-import { formatEventDate } from "../lib/format";
+import { formatEventDateRange } from "../lib/format";
 import { FavoriteButton } from "@features/favorites";
 
 const EventCard = memo(function EventCard({ event }) {
   const isOnline = event.type === EVENT_TYPE.ONLINE;
-  const location = isOnline ? "Online" : event.city;
+  const isHybrid = event.type === EVENT_TYPE.HYBRID;
+  const location = isOnline ? "Online" : isHybrid ? event.city || "Hibrit" : event.city;
 
   return (
     <Link
@@ -49,6 +50,7 @@ const EventCard = memo(function EventCard({ event }) {
             </svg>
           )}
           <span className="font-medium">{location}</span>
+          {isHybrid && <span className="text-zinc-500">· Hibrit</span>}
         </div>
       </div>
 
@@ -69,7 +71,7 @@ const EventCard = memo(function EventCard({ event }) {
             <rect x="3.5" y="5" width="17" height="15" rx="2" />
             <path d="M3.5 10h17M8 3v4M16 3v4" />
           </svg>
-          <span className="tabular">{formatEventDate(event.startsAt)}</span>
+          <span className="tabular">{formatEventDateRange(event.startsAt, event.endsAt)}</span>
         </div>
       </div>
     </Link>

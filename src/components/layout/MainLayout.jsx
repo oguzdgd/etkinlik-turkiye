@@ -1,7 +1,8 @@
 import { Suspense } from "react";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Spinner from "@components/ui/Spinner";
+import { ROUTES } from "@lib/constants";
 
 export default function MainLayout() {
   return (
@@ -36,20 +37,44 @@ function Footer() {
             </p>
           </div>
           {[
-            ["Keşfet", ["Bu hafta", "Harita", "Etkinlik Oluştur"]],
-            ["Hesap", ["Giriş yap", "Kayıt ol", "Panelim"]],
-            ["Şirket", ["Hakkımızda", "İletişim"]],
-          ].map(([heading, items]) => (
+            {
+              heading: "Keşfet",
+              links: [
+                { label: "Bu hafta", to: ROUTES.HOME },
+                { label: "Harita", to: ROUTES.MAP },
+                { label: "Etkinlik Oluştur", to: ROUTES.EVENT_NEW },
+              ],
+            },
+            {
+              heading: "Hesap",
+              links: [
+                { label: "Giriş yap", to: ROUTES.LOGIN },
+                { label: "Kayıt ol", to: ROUTES.REGISTER },
+                { label: "Panelim", to: ROUTES.DASHBOARD },
+              ],
+            },
+            {
+              heading: "Şirket",
+              links: [
+                { label: "Hakkımızda", to: null },
+                { label: "İletişim", to: null },
+              ],
+            },
+          ].map(({ heading, links }) => (
             <div key={heading}>
               <div className="mb-3 font-mono text-[10.5px] uppercase tracking-[0.18em] text-zinc-500">
                 {heading}
               </div>
               <ul className="space-y-1.5">
-                {items.map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-[13px] text-zinc-600 hover:text-zinc-900">
-                      {item}
-                    </a>
+                {links.map(({ label, to }) => (
+                  <li key={label}>
+                    {to ? (
+                      <Link to={to} className="text-[13px] text-zinc-600 hover:text-zinc-900">
+                        {label}
+                      </Link>
+                    ) : (
+                      <span className="cursor-default text-[13px] text-zinc-400">{label}</span>
+                    )}
                   </li>
                 ))}
               </ul>

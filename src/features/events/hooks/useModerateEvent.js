@@ -35,6 +35,7 @@ export function useModerateEvent() {
       queryClient.invalidateQueries({ queryKey: eventKeys.detail(eventId) });
       if (status === EVENT_STATUS.APPROVED) {
         queryClient.invalidateQueries({ queryKey: eventKeys.lists() });
+        queryClient.invalidateQueries({ queryKey: eventKeys.map() });
       }
     },
   });

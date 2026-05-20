@@ -2,25 +2,19 @@
  * Gmail OAuth2 refresh_token alma scripti — tek seferlik çalıştır.
  *
  * Kullanım:
- *   node --env-file=.env.local scripts/get-gmail-token.mjs
+ *   node scripts/get-gmail-token.mjs
  *
- * .env.local içinde olması gerekenler:
- *   GMAIL_CLIENT_ID=...
- *   GMAIL_CLIENT_SECRET=...
+ * Gereksinimler:
+ *   - Google Cloud Console'da proje oluştur
+ *   - Gmail API'yi aktif et
+ *   - OAuth 2.0 credentials oluştur (Desktop app türünde)
+ *   - client_id ve client_secret'ı aşağıya yaz
  */
 
-import http from 'http'
+const CLIENT_ID = 'BURAYA_CLIENT_ID_YAZ'
+const CLIENT_SECRET = 'BURAYA_CLIENT_SECRET_YAZ'
+const REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
-const CLIENT_ID = process.env.GMAIL_CLIENT_ID
-const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET
-
-if (!CLIENT_ID || !CLIENT_SECRET) {
-  console.error('Hata: .env.local dosyasında GMAIL_CLIENT_ID ve GMAIL_CLIENT_SECRET eksik.')
-  process.exit(1)
-}
-
-const PORT = 3333
-const REDIRECT_URI = `http://localhost:${PORT}/callback`
 const SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 const authUrl =
@@ -32,26 +26,18 @@ const authUrl =
   `&access_type=offline` +
   `&prompt=consent`
 
-console.log('\nTarayıcı açılıyor...')
-console.log('Açılmazsa bu URL\'yi manuel olarak aç:\n')
-console.log(authUrl + '\n')
+console.log('\n1. Bu URL\'yi tarayıcıda aç:\n')
+console.log(authUrl)
+console.log('\n2. Google hesabınla giriş yap ve izin ver.')
+console.log('3. Ekranda çıkan kodu aşağıya yapıştır:\n')
 
-const { exec } = await import('child_process')
-exec(`start "" "${authUrl}"`)
+const { createInterface } = await import('readline')
+const rl = createInterface({ input: process.stdin, output: process.stdout })
 
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://localhost:${PORT}`)
-  const code = url.searchParams.get('code')
+rl.question('Kod: ', async (code) => {
+  rl.close()
 
-  if (!code) {
-    res.end('Kod bulunamadı.')
-    return
-  }
-
-  res.end('<html><body><h2>✓ Başarılı! Terminal\'e dön.</h2></body></html>')
-  server.close()
-
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+  const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -63,18 +49,14 @@ const server = http.createServer(async (req, res) => {
     }),
   })
 
-  const data = await tokenRes.json()
+  const data = await res.json()
 
   if (data.refresh_token) {
-    console.log('✓ Başarılı! Supabase secrets\'a şunları ekle:\n')
+    console.log('\n✓ Başarılı! Supabase secrets\'a şunları ekle:\n')
     console.log(`GMAIL_CLIENT_ID     = ${CLIENT_ID}`)
     console.log(`GMAIL_CLIENT_SECRET = ${CLIENT_SECRET}`)
     console.log(`GMAIL_REFRESH_TOKEN = ${data.refresh_token}`)
   } else {
-    console.error('Hata:', JSON.stringify(data, null, 2))
+    console.error('\nHata:', data)
   }
-})
-
-server.listen(PORT, () => {
-  console.log(`Callback dinleniyor: http://localhost:${PORT}/callback`)
 })

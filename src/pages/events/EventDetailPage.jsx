@@ -1,11 +1,13 @@
 import { Link, useParams } from "react-router-dom";
 import { AttendeeCount, JoinButton, useEventDetail } from "@features/events";
-import { formatEventDate } from "@features/events/lib/format";
+import { useAuth } from "@features/auth";
+import { formatEventDate, formatEventDateRange } from "@features/events/lib/format";
 import { EVENT_STATUS, EVENT_TYPE } from "@lib/constants";
 import { usePageTitle } from "@hooks/usePageTitle";
 
 export default function EventDetailPage() {
   const { eventId } = useParams();
+  const { user } = useAuth();
   const { data: event, isLoading, isError, error } = useEventDetail(eventId);
 
   usePageTitle(event?.title ?? null);
@@ -24,6 +26,7 @@ export default function EventDetailPage() {
   }
 
   const isOnline = event.type === EVENT_TYPE.ONLINE;
+  const isHybrid = event.type === EVENT_TYPE.HYBRID;
 
   return (
     <article className="pb-16">
@@ -62,7 +65,7 @@ export default function EventDetailPage() {
                   <rect x="3.5" y="5" width="17" height="15" rx="2" />
                   <path d="M3.5 10h17M8 3v4M16 3v4" />
                 </svg>
-                <span className="tabular">{formatEventDate(event.startsAt)}</span>
+                <span className="tabular">{formatEventDateRange(event.startsAt, event.endsAt)}</span>
               </span>
               <span className="inline-flex items-center gap-1.5">
                 {isOnline ? (
@@ -76,7 +79,7 @@ export default function EventDetailPage() {
                     <circle cx="12" cy="9" r="2.5" />
                   </svg>
                 )}
-                {isOnline ? "Online" : event.city || "—"}
+                {isOnline ? "Online" : isHybrid ? `${event.city || "—"} · Hibrit` : event.city || "—"}
               </span>
             </div>
           </header>
@@ -97,36 +100,71 @@ export default function EventDetailPage() {
             </div>
 
             <div className="border-t border-zinc-100 pt-6 space-y-4 text-[13.5px]">
-              <InfoRow label={isOnline ? "Bağlantı" : "Mekan"}>
-                {isOnline ? (
+              {(isOnline || isHybrid) && event.onlineUrl && (
+                <InfoRow label={isHybrid ? "Online bağlantı" : "Bağlantı"}>
                   <a
                     href={event.onlineUrl}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel="noopener noreferrer nofollow"
                     className="break-all text-zinc-900 underline decoration-zinc-300 underline-offset-2 hover:decoration-zinc-900"
                   >
                     {event.onlineUrl}
                   </a>
-                ) : (
+                </InfoRow>
+              )}
+
+              {!isOnline && (
+                <InfoRow label="Mekan">
                   <span className="text-zinc-900">{event.locationText || event.city || "—"}</span>
-                )}
-              </InfoRow>
+                </InfoRow>
+              )}
 
               <InfoRow label="Tür">
-                <span className="text-zinc-900">{isOnline ? "Online" : "Yüz yüze"}</span>
+                <span className="text-zinc-900">
+                  {isOnline ? "Online" : isHybrid ? "Hibrit" : "Yüz yüze"}
+                </span>
               </InfoRow>
+
+              {event.websiteUrl && (
+                <InfoRow label="Etkinlik sayfası">
+                  <a
+                    href={event.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="inline-flex items-center gap-1 text-zinc-900 underline decoration-zinc-300 underline-offset-2 hover:decoration-zinc-900"
+                  >
+                    Siteyi ziyaret et
+                    <svg className="h-3.5 w-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </a>
+                </InfoRow>
+              )}
             </div>
           </div>
 
-          <Link
-            to="/"
-            className="mt-4 flex items-center gap-1.5 text-[12.5px] text-zinc-500 hover:text-zinc-900"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m15 19-7-7 7-7" />
-            </svg>
-            Tüm etkinlikler
-          </Link>
+          <div className="mt-4 flex items-center justify-between">
+            <Link
+              to="/"
+              className="flex items-center gap-1.5 text-[12.5px] text-zinc-500 hover:text-zinc-900"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m15 19-7-7 7-7" />
+              </svg>
+              Tüm etkinlikler
+            </Link>
+            {user?.uid === event.createdBy && (
+              <Link
+                to={`/events/${event.id}/edit`}
+                className="flex items-center gap-1 text-[12.5px] text-zinc-500 hover:text-zinc-900"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
+                </svg>
+                Düzenle
+              </Link>
+            )}
+          </div>
         </aside>
       </div>
     </article>

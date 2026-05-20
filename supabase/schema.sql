@@ -23,14 +23,16 @@ create table if not exists public.events (
   title text not null,
   description text not null,
   category text not null,
-  type text not null check (type in ('online', 'in_person')),
+  type text not null check (type in ('online', 'in_person', 'hybrid')),
   city text,
   location_text text,
   online_url text,
   lat double precision,
   lng double precision,
   starts_at timestamptz not null,
+  ends_at timestamptz,
   image_url text,
+  website_url text,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   created_by uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
@@ -42,6 +44,13 @@ alter table public.events add column if not exists lat double precision;
 alter table public.events add column if not exists lng double precision;
 alter table public.events add column if not exists source text not null default 'manual' check (source in ('manual', 'email_import'));
 alter table public.events add column if not exists email_message_id text unique;
+alter table public.events add column if not exists ends_at timestamptz;
+alter table public.events add column if not exists website_url text;
+
+-- hybrid tip desteği — mevcut constraint'i drop edip yeniden ekle
+alter table public.events drop constraint if exists events_type_check;
+alter table public.events add constraint events_type_check
+  check (type in ('online', 'in_person', 'hybrid'));
 
 create index if not exists events_status_starts_at_idx
   on public.events(status, starts_at);
@@ -116,8 +125,8 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- Owner kendi etkinliğinin status veya created_by alanını değiştiremesin.
--- Sadece admin değiştirebilir. Bu trigger RLS UPDATE policy'sinin
--- "USING/CHECK ile eski değer karşılaştırılamıyor" sınırlamasını çözer.
+-- İstisna: owner kendi etkinliğini 'pending'e resetleyebilir (edit → resubmit).
+-- Sadece admin diğer status geçişlerini yapabilir.
 create or replace function public.events_protect_immutable_fields()
 returns trigger
 language plpgsql
@@ -127,7 +136,10 @@ as $$
 begin
   if not public.is_admin() then
     if new.status is distinct from old.status then
-      raise exception 'Sadece admin status değiştirebilir.';
+      -- Owner sadece kendi etkinliğini 'pending'e resetleyebilir
+      if not (new.status = 'pending' and auth.uid() = old.created_by) then
+        raise exception 'Sadece admin status değiştirebilir.';
+      end if;
     end if;
     if new.created_by is distinct from old.created_by then
       raise exception 'created_by değiştirilemez.';

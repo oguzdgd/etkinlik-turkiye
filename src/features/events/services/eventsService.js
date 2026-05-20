@@ -10,10 +10,13 @@ export async function fetchEventsPage({ pageSize = 12, cursor = 0, filters = {} 
   const from = cursor;
   const to = cursor + pageSize - 1;
 
+  const todayISO = new Date().toISOString();
+
   let query = supabase
     .from(TABLE)
     .select("*")
     .eq("status", EVENT_STATUS.APPROVED)
+    .gte("starts_at", todayISO)
     .order("starts_at", { ascending: true })
     .range(from, to);
 
@@ -57,13 +60,16 @@ export async function fetchEventById(eventId) {
 
 // Approved in-person events that have coordinates — used by the map view.
 export async function fetchEventsForMap() {
+  const todayISO = new Date().toISOString();
   const { data, error } = await supabase
     .from(TABLE)
     .select("id, title, starts_at, lat, lng")
     .eq("status", EVENT_STATUS.APPROVED)
     .eq("type", "in_person")
     .not("lat", "is", null)
-    .not("lng", "is", null);
+    .not("lng", "is", null)
+    .gte("starts_at", todayISO)
+    .order("starts_at", { ascending: true });
 
   if (error) throw error;
   return data.map((row) => ({
@@ -77,7 +83,7 @@ export async function fetchEventsForMap() {
 
 // Born "pending" — RLS enforces this on the server too, so this is defence
 // in depth, not just convenience.
-export async function createEvent({ uid, startsAt, ...payload }) {
+export async function createEvent({ uid, startsAt, endsAt, ...payload }) {
   const { data, error } = await supabase
     .from(TABLE)
     .insert({
@@ -90,8 +96,10 @@ export async function createEvent({ uid, startsAt, ...payload }) {
       online_url: payload.onlineUrl || null,
       lat: payload.lat || null,
       lng: payload.lng || null,
-      starts_at: startsAt.toISOString(),
+      starts_at: startsAt instanceof Date ? startsAt.toISOString() : startsAt,
+      ends_at: endsAt ? (endsAt instanceof Date ? endsAt.toISOString() : endsAt) : null,
       image_url: payload.imageURL || null,
+      website_url: payload.websiteUrl || null,
       status: EVENT_STATUS.PENDING,
       created_by: uid,
     })
@@ -100,6 +108,34 @@ export async function createEvent({ uid, startsAt, ...payload }) {
 
   if (error) throw error;
   return data.id;
+}
+
+// Owner edit — always resets status to pending for re-moderation.
+// The events_protect_immutable_fields trigger allows this specific transition.
+export async function updateEvent(eventId, { uid, startsAt, endsAt, lat, lng, imageURL, ...payload }) {
+  const { error } = await supabase
+    .from(TABLE)
+    .update({
+      title: payload.title,
+      description: payload.description,
+      category: payload.category,
+      type: payload.type,
+      city: payload.city || null,
+      location_text: payload.locationText || null,
+      online_url: payload.onlineUrl || null,
+      lat: lat ?? null,
+      lng: lng ?? null,
+      starts_at: startsAt instanceof Date ? startsAt.toISOString() : startsAt,
+      ends_at: endsAt ? (endsAt instanceof Date ? endsAt.toISOString() : endsAt) : null,
+      image_url: imageURL || null,
+      website_url: payload.websiteUrl || null,
+      status: EVENT_STATUS.PENDING,
+      moderated_at: null,
+    })
+    .eq("id", eventId)
+    .eq("created_by", uid);
+
+  if (error) throw error;
 }
 
 // Only admins can hit this — the events_protect_immutable trigger on the
@@ -171,7 +207,9 @@ export function toEvent(row) {
     lat: row.lat ?? null,
     lng: row.lng ?? null,
     startsAt: row.starts_at,
+    endsAt: row.ends_at ?? null,
     imageURL: row.image_url,
+    websiteUrl: row.website_url ?? null,
     status: row.status,
     createdBy: row.created_by,
     createdAt: row.created_at,

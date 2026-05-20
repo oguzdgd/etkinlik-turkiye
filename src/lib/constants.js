@@ -12,6 +12,7 @@ export const EVENT_STATUS = Object.freeze({
 export const EVENT_TYPE = Object.freeze({
   ONLINE: "online",
   IN_PERSON: "in_person",
+  HYBRID: "hybrid",
 });
 
 export const EVENT_CATEGORIES = Object.freeze([
@@ -32,5 +33,9 @@ export const ROUTES = Object.freeze({
   ADMIN: "/admin",
   EVENTS: "/",
   EVENT_NEW: "/events/new",
+  MAP: "/events/map",
+  CATEGORIES: "/categories",
+  CITIES: "/cities",
+  CALENDAR: "/calendar",
   PROFILE: "/profile",
 });

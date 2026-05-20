@@ -7,7 +7,8 @@ export default function PendingEventRow({ event }) {
   const { mutate, isPending, variables } = useModerateEvent();
 
   const isOnline = event.type === EVENT_TYPE.ONLINE;
-  const location = isOnline ? "Online" : event.city || "—";
+  const isHybrid = event.type === EVENT_TYPE.HYBRID;
+  const location = isOnline ? "Online" : isHybrid ? `${event.city || "—"} + Online` : event.city || "—";
   const moderating = isPending && variables?.eventId === event.id;
 
   return (
@@ -35,6 +36,19 @@ export default function PendingEventRow({ event }) {
         </Link>
         <p className="text-[12.5px] text-zinc-500">{formatEventDate(event.startsAt)}</p>
         <p className="clamp-2 mt-1 text-[13px] leading-relaxed text-zinc-600">{event.description}</p>
+        {event.websiteUrl && (
+          <div className="mt-2 space-y-0.5">
+            <a
+              href={event.websiteUrl}
+              rel="noopener noreferrer nofollow"
+              target="_blank"
+              className="text-[12.5px] text-zinc-700 underline hover:text-zinc-900"
+            >
+              Etkinlik sayfası ↗
+            </a>
+            <div className="font-mono text-[11px] text-zinc-400 break-all">{event.websiteUrl}</div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-row gap-2 sm:flex-col sm:justify-center sm:items-end">

@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { EVENT_CATEGORIES, EVENT_TYPE } from "@lib/constants";
-import { useCreateEvent } from "../hooks/useCreateEvent";
 import { validateEventForm } from "../lib/validation";
 
-const initialValues = {
+const DEFAULT_VALUES = {
   title: "",
   description: "",
   category: "",
@@ -13,21 +11,51 @@ const initialValues = {
   locationText: "",
   onlineUrl: "",
   startsAt: "",
+  endsAt: "",
+  websiteUrl: "",
   imageFile: null,
 };
 
-export default function EventCreateForm() {
-  const navigate = useNavigate();
-  const { mutateAsync, isPending } = useCreateEvent();
-  const [values, setValues] = useState(initialValues);
+// Converts an ISO/DB timestamp to the YYYY-MM-DDTHH:MM string that
+// datetime-local inputs expect (local time, not UTC).
+function toDatetimeLocal(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";
+  const offset = d.getTimezoneOffset() * 60000;
+  return new Date(d - offset).toISOString().slice(0, 16);
+}
+
+function buildInitialValues(external = {}) {
+  return {
+    title: external.title ?? "",
+    description: external.description ?? "",
+    category: external.category ?? "",
+    type: external.type ?? EVENT_TYPE.IN_PERSON,
+    city: external.city ?? "",
+    locationText: external.locationText ?? "",
+    onlineUrl: external.onlineUrl ?? "",
+    startsAt: toDatetimeLocal(external.startsAt),
+    endsAt: toDatetimeLocal(external.endsAt),
+    websiteUrl: external.websiteUrl ?? "",
+    imageFile: null,
+  };
+}
+
+export default function EventCreateForm({
+  initialValues: externalInitialValues = {},
+  onSubmit,
+  isPending = false,
+  submitLabel = "Onaya gönder",
+}) {
+  const [values, setValues] = useState(() => buildInitialValues(externalInitialValues));
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreview, setImagePreview] = useState(externalInitialValues?.imageURL ?? null);
 
-  // Free the object URL when the preview changes or the form unmounts.
   useEffect(() => {
     return () => {
-      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      if (imagePreview?.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
     };
   }, [imagePreview]);
 
@@ -36,7 +64,7 @@ export default function EventCreateForm() {
   const handleImage = (file) => {
     setField("imageFile", file ?? null);
     setImagePreview((current) => {
-      if (current) URL.revokeObjectURL(current);
+      if (current?.startsWith("blob:")) URL.revokeObjectURL(current);
       return file ? URL.createObjectURL(file) : null;
     });
   };
@@ -45,10 +73,10 @@ export default function EventCreateForm() {
     e.preventDefault();
     setSubmitError(null);
 
-    // Convert datetime-local string into a real Date for validation + service.
     const candidate = {
       ...values,
       startsAt: values.startsAt ? new Date(values.startsAt) : null,
+      endsAt: values.endsAt ? new Date(values.endsAt) : null,
     };
 
     const result = validateEventForm(candidate);
@@ -58,21 +86,26 @@ export default function EventCreateForm() {
     }
     setErrors({});
 
-    // Strip irrelevant location fields based on type so we don't persist stale values.
-    const payload =
-      candidate.type === EVENT_TYPE.ONLINE
-        ? { ...candidate, city: "", locationText: "" }
-        : { ...candidate, onlineUrl: "" };
+    // Strip irrelevant location fields so we don't persist stale values.
+    let payload = { ...candidate };
+    if (candidate.type === EVENT_TYPE.ONLINE) {
+      payload = { ...payload, city: "", locationText: "" };
+    } else if (candidate.type === EVENT_TYPE.IN_PERSON) {
+      payload = { ...payload, onlineUrl: "" };
+    }
+    // hybrid: keep all fields
 
     try {
-      await mutateAsync(payload);
-      navigate("/dashboard?created=1");
+      await onSubmit(payload);
     } catch (err) {
-      setSubmitError(err.message ?? "Etkinlik oluşturulamadı.");
+      setSubmitError(err.message ?? "İşlem tamamlanamadı.");
     }
   };
 
   const isOnline = values.type === EVENT_TYPE.ONLINE;
+  const isHybrid = values.type === EVENT_TYPE.HYBRID;
+  const showLocation = !isOnline; // in_person + hybrid
+  const showOnlineUrl = isOnline || isHybrid;
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
@@ -111,23 +144,24 @@ export default function EventCreateForm() {
         </Field>
 
         <fieldset>
-          <legend className="mb-1 block text-sm font-medium text-gray-700">
+          <legend className="mb-1 block text-sm font-medium text-zinc-700">
             Etkinlik tipi
           </legend>
           <div className="flex gap-2">
             {[
               { value: EVENT_TYPE.IN_PERSON, label: "Yüz yüze" },
               { value: EVENT_TYPE.ONLINE, label: "Online" },
+              { value: EVENT_TYPE.HYBRID, label: "Hibrit" },
             ].map((opt) => {
               const checked = values.type === opt.value;
               return (
                 <label
                   key={opt.value}
                   className={[
-                    "flex-1 cursor-pointer rounded-md border px-3 py-2 text-center text-sm transition",
+                    "flex-1 cursor-pointer rounded-xl border px-3 py-2 text-center text-[13px] transition",
                     checked
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
+                      ? "border-zinc-900 bg-zinc-900 text-white"
+                      : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50",
                   ].join(" ")}
                 >
                   <input
@@ -147,17 +181,7 @@ export default function EventCreateForm() {
         </fieldset>
       </div>
 
-      {isOnline ? (
-        <Field label="Etkinlik bağlantısı" error={errors.onlineUrl}>
-          <input
-            type="url"
-            value={values.onlineUrl}
-            onChange={(e) => setField("onlineUrl", e.target.value)}
-            placeholder="https://meet.google.com/…"
-            className={inputClass(errors.onlineUrl)}
-          />
-        </Field>
-      ) : (
+      {showLocation && (
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Şehir" error={errors.city}>
             <input
@@ -178,12 +202,48 @@ export default function EventCreateForm() {
         </div>
       )}
 
-      <Field label="Tarih ve saat" error={errors.startsAt}>
+      {showOnlineUrl && (
+        <Field
+          label={isHybrid ? "Online bağlantı (hibrit)" : "Etkinlik bağlantısı"}
+          error={errors.onlineUrl}
+        >
+          <input
+            type="url"
+            value={values.onlineUrl}
+            onChange={(e) => setField("onlineUrl", e.target.value)}
+            placeholder="https://meet.google.com/…"
+            className={inputClass(errors.onlineUrl)}
+          />
+        </Field>
+      )}
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Başlangıç tarihi ve saati" error={errors.startsAt}>
+          <input
+            type="datetime-local"
+            value={values.startsAt}
+            onChange={(e) => setField("startsAt", e.target.value)}
+            className={inputClass(errors.startsAt)}
+          />
+        </Field>
+        <Field label="Bitiş tarihi (opsiyonel)" error={errors.endsAt}>
+          <input
+            type="datetime-local"
+            value={values.endsAt}
+            min={values.startsAt || undefined}
+            onChange={(e) => setField("endsAt", e.target.value)}
+            className={inputClass(errors.endsAt)}
+          />
+        </Field>
+      </div>
+
+      <Field label="Etkinlik sayfası (opsiyonel)" error={errors.websiteUrl}>
         <input
-          type="datetime-local"
-          value={values.startsAt}
-          onChange={(e) => setField("startsAt", e.target.value)}
-          className={inputClass(errors.startsAt)}
+          type="url"
+          value={values.websiteUrl}
+          onChange={(e) => setField("websiteUrl", e.target.value)}
+          placeholder="https://etkinlik.com/kayit"
+          className={inputClass(errors.websiteUrl)}
         />
       </Field>
 
@@ -192,42 +252,42 @@ export default function EventCreateForm() {
           type="file"
           accept="image/*"
           onChange={(e) => handleImage(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-gray-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-gray-800"
+          className="block w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-zinc-800"
         />
         {imagePreview && (
           <img
             src={imagePreview}
             alt=""
-            className="mt-3 h-40 w-full rounded-md object-cover"
+            className="mt-3 h-40 w-full rounded-xl object-cover"
           />
         )}
       </Field>
 
       {submitError && <p className="text-sm text-red-600">{submitError}</p>}
 
-      <div className="flex flex-col items-start justify-between gap-3 border-t border-gray-200 pt-4 sm:flex-row sm:items-center">
-        <p className="text-xs text-gray-500">
+      <div className="flex flex-col items-start justify-between gap-3 border-t border-zinc-200 pt-4 sm:flex-row sm:items-center">
+        <p className="text-xs text-zinc-500">
           Etkinliğin admin onayından sonra herkese görünür olur.
         </p>
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60"
+          className="focus-ring inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
         >
-          {isPending ? "Gönderiliyor…" : "Onaya gönder"}
+          {isPending && (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
+          )}
+          {isPending ? "Gönderiliyor…" : submitLabel}
         </button>
       </div>
     </form>
   );
 }
 
-// Wrapping <label> around a single input gives implicit input-label association
-// without needing to manage IDs. For the radio group (multiple inputs) we use
-// a <fieldset>/<legend> instead — see above.
 function Field({ label, error, children }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-gray-700">{label}</span>
+      <span className="mb-1 block text-sm font-medium text-zinc-700">{label}</span>
       {children}
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </label>
@@ -236,8 +296,8 @@ function Field({ label, error, children }) {
 
 function inputClass(error) {
   return [
-    "w-full rounded-md border bg-white px-3 py-2 text-sm shadow-sm",
-    "focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1",
-    error ? "border-red-500" : "border-gray-300",
+    "w-full rounded-xl border bg-white px-3 py-2.5 text-[13.5px]",
+    "focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1",
+    error ? "border-red-400" : "border-zinc-300 hover:border-zinc-400",
   ].join(" ");
 }

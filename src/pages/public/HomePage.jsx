@@ -25,7 +25,7 @@ export default function HomePage() {
   return (
     <div className="space-y-10">
       {/* Hero — tam ekran, negative margin ile container padding'den çıkıyor */}
-      <section className="hero-full-bleed stripe-placeholder-dark relative -mt-8 flex min-h-[calc(100vh-4rem)] flex-col overflow-hidden bg-black text-white">
+      <section className="hero-full-bleed stripe-placeholder-dark relative -mt-8 flex min-h-[500px] flex-col overflow-hidden bg-black text-white">
         <div className="relative flex flex-1 flex-col justify-between px-8 py-16 md:px-14 md:py-20">
           {/* Top meta row */}
           <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">

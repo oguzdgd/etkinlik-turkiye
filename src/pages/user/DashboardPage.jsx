@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@features/auth";
 import { useUserEvents, useUserJoinedEvents, useLeaveEvent } from "@features/events";
 import { useUserFavoriteEvents } from "@features/favorites";
@@ -27,9 +27,28 @@ const STATUS_LABEL = {
 export default function DashboardPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("mine");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const showUpdated = searchParams.get("updated") === "1";
+
+  useEffect(() => {
+    if (showUpdated) {
+      const t = setTimeout(() => {
+        setSearchParams((p) => { p.delete("updated"); return p; }, { replace: true });
+      }, 4000);
+      return () => clearTimeout(t);
+    }
+  }, [showUpdated, setSearchParams]);
 
   return (
     <section className="space-y-6">
+      {showUpdated && (
+        <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
+          <svg className="h-4 w-4 shrink-0 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          Etkinlik güncellendi — admin onayından sonra yayına girecek.
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Panelim</h1>
@@ -97,13 +116,21 @@ function MyEventsTab() {
               {formatEventDate(event.startsAt)}
             </p>
           </div>
-          <span
-            className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              STATUS_BADGE[event.status] ?? "bg-gray-100 text-gray-700"
-            }`}
-          >
-            {STATUS_LABEL[event.status] ?? event.status}
-          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              to={`/events/${event.id}/edit`}
+              className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+            >
+              Düzenle
+            </Link>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                STATUS_BADGE[event.status] ?? "bg-gray-100 text-gray-700"
+              }`}
+            >
+              {STATUS_LABEL[event.status] ?? event.status}
+            </span>
+          </div>
         </li>
       ))}
     </ul>
