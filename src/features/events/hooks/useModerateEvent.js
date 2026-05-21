@@ -33,6 +33,8 @@ export function useModerateEvent() {
     onSettled: (_data, _err, { eventId, status }) => {
       queryClient.invalidateQueries({ queryKey: eventKeys.pending() });
       queryClient.invalidateQueries({ queryKey: eventKeys.detail(eventId) });
+      // Invalidate all userEvents queries — owner's dashboard shows updated status
+      queryClient.invalidateQueries({ queryKey: [...eventKeys.all, "userEvents"] });
       if (status === EVENT_STATUS.APPROVED) {
         queryClient.invalidateQueries({ queryKey: eventKeys.lists() });
         queryClient.invalidateQueries({ queryKey: eventKeys.map() });

@@ -8,7 +8,7 @@ export default function MainLayout() {
   return (
     <div className="flex min-h-full flex-col overflow-x-hidden bg-zinc-50 text-zinc-900">
       <Navbar />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-8">
         <Suspense fallback={<Spinner />}>
           <Outlet />
         </Suspense>
@@ -21,7 +21,7 @@ export default function MainLayout() {
 function Footer() {
   return (
     <footer className="border-t border-zinc-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8">
         <div className="grid grid-cols-2 gap-8 py-10 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
             <div className="mb-3 flex items-center gap-2">

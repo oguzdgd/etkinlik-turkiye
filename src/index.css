@@ -86,11 +86,11 @@ body,
 /* ── Full-bleed: container padding ve max-width'ten kaçar, 100vw genişlik alır ── */
 .hero-full-bleed {
   width: 100vw;
-  margin-left: calc(-1rem - max(0px, (100vw - 72rem) / 2));
+  margin-left: calc(-1rem - max(0px, (100vw - 80rem) / 2));
 }
 
 @media (min-width: 640px) {
   .hero-full-bleed {
-    margin-left: calc(-1.5rem - max(0px, (100vw - 72rem) / 2));
+    margin-left: calc(-2rem - max(0px, (100vw - 80rem) / 2));
   }
 }
