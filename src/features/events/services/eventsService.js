@@ -10,7 +10,7 @@ export async function fetchEventsPage({ pageSize = 12, cursor = 0, filters = {} 
   const from = cursor;
   const to = cursor + pageSize - 1;
 
-  const todayISO = new Date().toISOString();
+  const todayISO = new Date(new Date().toISOString().slice(0, 10)).toISOString();
 
   let query = supabase
     .from(TABLE)
@@ -60,7 +60,7 @@ export async function fetchEventById(eventId) {
 
 // Approved in-person events that have coordinates — used by the map view.
 export async function fetchEventsForMap() {
-  const todayISO = new Date().toISOString();
+  const todayISO = new Date(new Date().toISOString().slice(0, 10)).toISOString();
   const { data, error } = await supabase
     .from(TABLE)
     .select("id, title, starts_at, lat, lng")
@@ -83,7 +83,7 @@ export async function fetchEventsForMap() {
 
 // Born "pending" — RLS enforces this on the server too, so this is defence
 // in depth, not just convenience.
-export async function createEvent({ uid, startsAt, endsAt, ...payload }) {
+export async function createEvent({ uid, startsAt, endsAt, timeTbd, applicationDeadline, ...payload }) {
   const { data, error } = await supabase
     .from(TABLE)
     .insert({
@@ -98,6 +98,10 @@ export async function createEvent({ uid, startsAt, endsAt, ...payload }) {
       lng: payload.lng || null,
       starts_at: startsAt instanceof Date ? startsAt.toISOString() : startsAt,
       ends_at: endsAt ? (endsAt instanceof Date ? endsAt.toISOString() : endsAt) : null,
+      time_tbd: timeTbd ?? false,
+      application_deadline: applicationDeadline
+        ? (applicationDeadline instanceof Date ? applicationDeadline.toISOString() : applicationDeadline)
+        : null,
       image_url: payload.imageURL || null,
       website_url: payload.websiteUrl || null,
       status: EVENT_STATUS.PENDING,
@@ -112,7 +116,7 @@ export async function createEvent({ uid, startsAt, endsAt, ...payload }) {
 
 // Owner edit — always resets status to pending for re-moderation.
 // The events_protect_immutable_fields trigger allows this specific transition.
-export async function updateEvent(eventId, { uid, startsAt, endsAt, lat, lng, imageURL, ...payload }) {
+export async function updateEvent(eventId, { uid, startsAt, endsAt, timeTbd, applicationDeadline, lat, lng, imageURL, ...payload }) {
   const { error } = await supabase
     .from(TABLE)
     .update({
@@ -127,11 +131,26 @@ export async function updateEvent(eventId, { uid, startsAt, endsAt, lat, lng, im
       lng: lng ?? null,
       starts_at: startsAt instanceof Date ? startsAt.toISOString() : startsAt,
       ends_at: endsAt ? (endsAt instanceof Date ? endsAt.toISOString() : endsAt) : null,
+      time_tbd: timeTbd ?? false,
+      application_deadline: applicationDeadline
+        ? (applicationDeadline instanceof Date ? applicationDeadline.toISOString() : applicationDeadline)
+        : null,
       image_url: imageURL || null,
       website_url: payload.websiteUrl || null,
       status: EVENT_STATUS.PENDING,
       moderated_at: null,
     })
+    .eq("id", eventId)
+    .eq("created_by", uid);
+
+  if (error) throw error;
+}
+
+// Owner can delete any of their own events; RLS enforces this on the server too.
+export async function deleteEvent(eventId, uid) {
+  const { error } = await supabase
+    .from(TABLE)
+    .delete()
     .eq("id", eventId)
     .eq("created_by", uid);
 
@@ -208,6 +227,8 @@ export function toEvent(row) {
     lng: row.lng ?? null,
     startsAt: row.starts_at,
     endsAt: row.ends_at ?? null,
+    timeTbd: row.time_tbd ?? false,
+    applicationDeadline: row.application_deadline ?? null,
     imageURL: row.image_url,
     websiteUrl: row.website_url ?? null,
     status: row.status,

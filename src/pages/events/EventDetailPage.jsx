@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { AttendeeCount, JoinButton, useEventDetail } from "@features/events";
 import { useAuth } from "@features/auth";
-import { formatEventDate, formatEventDateRange } from "@features/events/lib/format";
+import { formatDateOnly, formatEventDateRange } from "@features/events/lib/format";
 import { EVENT_STATUS, EVENT_TYPE } from "@lib/constants";
 import { usePageTitle } from "@hooks/usePageTitle";
 
@@ -65,7 +65,7 @@ export default function EventDetailPage() {
                   <rect x="3.5" y="5" width="17" height="15" rx="2" />
                   <path d="M3.5 10h17M8 3v4M16 3v4" />
                 </svg>
-                <span className="tabular">{formatEventDateRange(event.startsAt, event.endsAt)}</span>
+                <span className="tabular">{formatEventDateRange(event.startsAt, event.endsAt, { timeTbd: event.timeTbd })}</span>
               </span>
               <span className="inline-flex items-center gap-1.5">
                 {isOnline ? (
@@ -124,6 +124,12 @@ export default function EventDetailPage() {
                   {isOnline ? "Online" : isHybrid ? "Hibrit" : "Yüz yüze"}
                 </span>
               </InfoRow>
+
+              {event.applicationDeadline && (
+                <InfoRow label="Son başvuru">
+                  <span className="text-zinc-900">{formatDateOnly(event.applicationDeadline)}</span>
+                </InfoRow>
+              )}
 
               {event.websiteUrl && (
                 <InfoRow label="Etkinlik sayfası">

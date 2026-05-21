@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@features/auth";
-import { useUserEvents, useUserJoinedEvents, useLeaveEvent } from "@features/events";
+import { useUserEvents, useUserJoinedEvents, useLeaveEvent, useDeleteEvent } from "@features/events";
 import { useUserFavoriteEvents } from "@features/favorites";
 import { EVENT_STATUS, ROUTES } from "@lib/constants";
 import { formatEventDate } from "@features/events/lib/format";
@@ -91,6 +91,8 @@ export default function DashboardPage() {
 
 function MyEventsTab() {
   const { data: events = [], isLoading } = useUserEvents();
+  const { mutate: deleteEvent, isPending: isDeleting, variables: deletingId } = useDeleteEvent();
+  const [confirmingId, setConfirmingId] = useState(null);
 
   if (isLoading) return <LoadingRows />;
   if (!events.length)
@@ -103,36 +105,73 @@ function MyEventsTab() {
 
   return (
     <ul className="divide-y divide-gray-100">
-      {events.map((event) => (
-        <li key={event.id} className="flex items-center justify-between py-3 gap-4">
-          <div className="min-w-0">
-            <Link
-              to={`/events/${event.id}`}
-              className="text-sm font-medium text-gray-900 hover:underline truncate block"
-            >
-              {event.title}
-            </Link>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {formatEventDate(event.startsAt)}
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Link
-              to={`/events/${event.id}/edit`}
-              className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
-            >
-              Düzenle
-            </Link>
-            <span
-              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                STATUS_BADGE[event.status] ?? "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {STATUS_LABEL[event.status] ?? event.status}
-            </span>
-          </div>
-        </li>
-      ))}
+      {events.map((event) => {
+        const isThisDeleting = isDeleting && deletingId === event.id;
+        const isConfirming = confirmingId === event.id;
+
+        return (
+          <li key={event.id} className="flex items-center justify-between py-3 gap-4">
+            <div className="min-w-0">
+              <Link
+                to={`/events/${event.id}`}
+                className="text-sm font-medium text-gray-900 hover:underline truncate block"
+              >
+                {event.title}
+              </Link>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {formatEventDate(event.startsAt, { timeTbd: event.timeTbd })}
+              </p>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              {isConfirming ? (
+                <>
+                  <span className="text-xs text-zinc-600">Silinsin mi?</span>
+                  <button
+                    type="button"
+                    onClick={() => { deleteEvent(event.id); setConfirmingId(null); }}
+                    disabled={isThisDeleting}
+                    className="rounded-md bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 transition disabled:opacity-50"
+                  >
+                    Evet, sil
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingId(null)}
+                    className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    İptal
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to={`/events/${event.id}/edit`}
+                    className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    Düzenle
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingId(event.id)}
+                    disabled={isThisDeleting}
+                    className="rounded-md border border-red-200 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-50"
+                  >
+                    {isThisDeleting ? "Siliniyor…" : "Sil"}
+                  </button>
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      STATUS_BADGE[event.status] ?? "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {STATUS_LABEL[event.status] ?? event.status}
+                  </span>
+                </>
+              )}
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

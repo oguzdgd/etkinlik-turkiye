@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { EVENT_STATUS, EVENT_TYPE } from "@lib/constants";
-import { formatEventDate } from "../lib/format";
+import { formatDateOnly, formatEventDate } from "../lib/format";
 import { useModerateEvent } from "../hooks/useModerateEvent";
 
 export default function PendingEventRow({ event }) {
@@ -34,7 +34,12 @@ export default function PendingEventRow({ event }) {
         >
           {event.title}
         </Link>
-        <p className="text-[12.5px] text-zinc-500">{formatEventDate(event.startsAt)}</p>
+        <p className="text-[12.5px] text-zinc-500">
+          {formatEventDate(event.startsAt, { timeTbd: event.timeTbd })}
+          {event.applicationDeadline && (
+            <span className="ml-2 text-zinc-400">· Son başvuru: {formatDateOnly(event.applicationDeadline)}</span>
+          )}
+        </p>
         <p className="clamp-2 mt-1 text-[13px] leading-relaxed text-zinc-600">{event.description}</p>
         {event.websiteUrl && (
           <div className="mt-2 space-y-0.5">

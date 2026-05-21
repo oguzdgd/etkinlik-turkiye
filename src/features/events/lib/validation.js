@@ -22,13 +22,13 @@ export function validateEventForm(values) {
     if (!values.city?.trim()) errors.city = "Şehir zorunlu.";
     if (!values.locationText?.trim()) errors.locationText = "Mekan/adres zorunlu.";
   } else if (values.type === EVENT_TYPE.ONLINE) {
-    if (!isValidHttpUrl(values.onlineUrl)) {
+    if (values.onlineUrl && !isValidHttpUrl(values.onlineUrl)) {
       errors.onlineUrl = "Geçerli bir bağlantı girin (http/https).";
     }
   } else if (values.type === EVENT_TYPE.HYBRID) {
     if (!values.city?.trim()) errors.city = "Şehir zorunlu.";
     if (!values.locationText?.trim()) errors.locationText = "Mekan/adres zorunlu.";
-    if (!isValidHttpUrl(values.onlineUrl)) {
+    if (values.onlineUrl && !isValidHttpUrl(values.onlineUrl)) {
       errors.onlineUrl = "Geçerli bir online bağlantı girin (http/https).";
     }
   } else {
@@ -36,11 +36,11 @@ export function validateEventForm(values) {
   }
 
   if (!values.startsAt) {
-    errors.startsAt = "Tarih ve saat zorunlu.";
+    errors.startsAt = "Başlangıç tarihi zorunlu.";
   } else {
     const date = values.startsAt instanceof Date ? values.startsAt : new Date(values.startsAt);
     if (Number.isNaN(date.getTime())) errors.startsAt = "Tarih okunamadı.";
-    else if (date.getTime() < Date.now()) errors.startsAt = "Tarih gelecekte olmalı.";
+    else if (date.getTime() < Date.now() - 86400000) errors.startsAt = "Tarih geçmişte olamaz.";
   }
 
   if (values.endsAt) {
@@ -48,6 +48,21 @@ export function validateEventForm(values) {
     const start = values.startsAt instanceof Date ? values.startsAt : new Date(values.startsAt);
     if (!Number.isNaN(end.getTime()) && !Number.isNaN(start.getTime())) {
       if (end <= start) errors.endsAt = "Bitiş tarihi başlangıçtan sonra olmalı.";
+    }
+  }
+
+  if (values.applicationDeadline) {
+    const deadline =
+      values.applicationDeadline instanceof Date
+        ? values.applicationDeadline
+        : new Date(values.applicationDeadline);
+    if (Number.isNaN(deadline.getTime())) {
+      errors.applicationDeadline = "Geçersiz tarih.";
+    } else if (values.startsAt) {
+      const start = values.startsAt instanceof Date ? values.startsAt : new Date(values.startsAt);
+      if (!Number.isNaN(start.getTime()) && deadline >= start) {
+        errors.applicationDeadline = "Son başvuru tarihi, etkinlik başlangıcından önce olmalı.";
+      }
     }
   }
 

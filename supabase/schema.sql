@@ -31,6 +31,8 @@ create table if not exists public.events (
   lng double precision,
   starts_at timestamptz not null,
   ends_at timestamptz,
+  time_tbd boolean not null default false,
+  application_deadline timestamptz,
   image_url text,
   website_url text,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
@@ -46,6 +48,8 @@ alter table public.events add column if not exists source text not null default 
 alter table public.events add column if not exists email_message_id text unique;
 alter table public.events add column if not exists ends_at timestamptz;
 alter table public.events add column if not exists website_url text;
+alter table public.events add column if not exists time_tbd boolean not null default false;
+alter table public.events add column if not exists application_deadline timestamptz;
 
 -- hybrid tip desteği — mevcut constraint'i drop edip yeniden ekle
 alter table public.events drop constraint if exists events_type_check;

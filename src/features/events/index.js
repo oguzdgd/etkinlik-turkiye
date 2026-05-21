@@ -18,6 +18,7 @@ export { useIsJoined } from "./hooks/useIsJoined";
 export { useJoinEvent } from "./hooks/useJoinEvent";
 export { useCreateEvent } from "./hooks/useCreateEvent";
 export { useUpdateEvent } from "./hooks/useUpdateEvent";
+export { useDeleteEvent } from "./hooks/useDeleteEvent";
 export { usePendingEvents } from "./hooks/usePendingEvents";
 export { useModerateEvent } from "./hooks/useModerateEvent";
 export { useEventsForMap } from "./hooks/useEventsForMap";
