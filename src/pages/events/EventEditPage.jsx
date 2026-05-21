@@ -21,8 +21,6 @@ export default function EventEditPage() {
   const handleSubmit = async (payload) => {
     await mutateAsync({
       eventId,
-      existingLat: event.lat,
-      existingLng: event.lng,
       existingImageURL: event.imageURL,
       ...payload,
     });

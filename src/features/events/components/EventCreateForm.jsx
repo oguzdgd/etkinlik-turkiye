@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { CATEGORY_DESCRIPTIONS, EVENT_CATEGORIES, EVENT_TYPE } from "@lib/constants";
 import { validateEventForm } from "../lib/validation";
+
+const LocationPicker = lazy(() => import("./LocationPicker"));
 
 // Converts an ISO/DB timestamp to local date (YYYY-MM-DD) and time (HH:MM) strings.
 function splitToLocal(value) {
@@ -38,6 +40,8 @@ function buildInitialValues(external = {}) {
     city: external.city ?? "",
     locationText: external.locationText ?? "",
     onlineUrl: external.onlineUrl ?? "",
+    lat: external.lat ?? null,
+    lng: external.lng ?? null,
     startsDate,
     startsTime: external.timeTbd ? "" : startsTime,
     endsAt: toDatetimeLocal(external.endsAt),
@@ -102,7 +106,7 @@ export default function EventCreateForm({
 
     let payload = { ...candidate };
     if (candidate.type === EVENT_TYPE.ONLINE) {
-      payload = { ...payload, city: "", locationText: "" };
+      payload = { ...payload, city: "", locationText: "", lat: null, lng: null };
     } else if (candidate.type === EVENT_TYPE.IN_PERSON) {
       payload = { ...payload, onlineUrl: "" };
     }
@@ -231,25 +235,46 @@ export default function EventCreateForm({
 
       {/* Konum */}
       {showLocation && (
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Şehir *" error={errors.city}>
-            <input
-              type="text"
-              value={values.city}
-              onChange={(e) => setField("city", e.target.value)}
-              placeholder="İstanbul"
-              className={inputClass(errors.city)}
-            />
-          </Field>
-          <Field label="Mekan / adres *" error={errors.locationText}>
-            <input
-              type="text"
-              value={values.locationText}
-              onChange={(e) => setField("locationText", e.target.value)}
-              placeholder="Venue adı veya adres"
-              className={inputClass(errors.locationText)}
-            />
-          </Field>
+        <div className="space-y-4">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Şehir *" error={errors.city}>
+              <input
+                type="text"
+                value={values.city}
+                onChange={(e) => setField("city", e.target.value)}
+                placeholder="İstanbul"
+                className={inputClass(errors.city)}
+              />
+            </Field>
+            <Field label="Mekan / adres *" error={errors.locationText}>
+              <input
+                type="text"
+                value={values.locationText}
+                onChange={(e) => setField("locationText", e.target.value)}
+                placeholder="Venue adı veya adres"
+                className={inputClass(errors.locationText)}
+              />
+            </Field>
+          </div>
+
+          {/* Harita ile konum seçici */}
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-sm font-medium text-zinc-700">Harita konumu (opsiyonel)</span>
+              <span className="text-[11px] text-zinc-400">Haritada gözükmesi için sabitle</span>
+            </div>
+            <Suspense fallback={<div className="flex h-[280px] items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-[12px] text-zinc-400">Harita yükleniyor…</div>}>
+              <LocationPicker
+                lat={values.lat}
+                lng={values.lng}
+                city={values.city}
+                onChange={(lat, lng) => {
+                  setField("lat", lat);
+                  setField("lng", lng);
+                }}
+              />
+            </Suspense>
+          </div>
         </div>
       )}
 

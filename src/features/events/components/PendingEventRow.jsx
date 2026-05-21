@@ -44,6 +44,9 @@ export default function PendingEventRow({ event }) {
           )}
         </p>
         <p className="clamp-2 mt-1 text-[13px] leading-relaxed text-zinc-600">{event.description}</p>
+        {!event.lat && (event.type === "in_person" || event.type === "hybrid") && (
+          <p className="mt-1 font-mono text-[10.5px] text-amber-600">⚠ Koordinat yok — haritada gözükmez</p>
+        )}
         {event.websiteUrl && (
           <div className="mt-2 space-y-0.5">
             <a

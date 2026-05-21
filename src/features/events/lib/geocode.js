@@ -15,13 +15,20 @@ export async function geocodeAddress({ city, locationText } = {}) {
     const res = await fetch(url, {
       headers: { "User-Agent": "EtkinlikTurkiye/1.0" },
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(`[geocode] Nominatim ${res.status} for q="${q}"`);
+      return null;
+    }
 
     const [result] = await res.json();
-    if (!result) return null;
+    if (!result) {
+      console.warn(`[geocode] No results for q="${q}"`);
+      return null;
+    }
 
     return { lat: parseFloat(result.lat), lng: parseFloat(result.lon) };
-  } catch {
+  } catch (err) {
+    console.warn("[geocode] fetch failed:", err);
     return null;
   }
 }
