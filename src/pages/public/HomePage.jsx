@@ -2,23 +2,46 @@ import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { EventList, EventFilters, useEventStats } from "@features/events";
 import { useDebounce } from "@hooks/useDebounce";
-import { usePageTitle } from "@hooks/usePageTitle";
+import { usePageMeta } from "@hooks/usePageMeta";
 import { EVENT_CATEGORIES } from "@lib/constants";
 
 const CITY_COUNT = 7; // İstanbul, Ankara, İzmir, Bursa, Antalya, Eskişehir + Online
 
+function dateRangeToISO(range) {
+  const now = new Date();
+  const todayStart = new Date(now.toISOString().slice(0, 10));
+  if (range === "today") {
+    const end = new Date(todayStart);
+    end.setHours(23, 59, 59, 999);
+    return { dateFrom: todayStart.toISOString(), dateTo: end.toISOString() };
+  }
+  if (range === "week") {
+    const end = new Date(todayStart);
+    end.setDate(end.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return { dateFrom: todayStart.toISOString(), dateTo: end.toISOString() };
+  }
+  if (range === "month") {
+    const end = new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { dateFrom: todayStart.toISOString(), dateTo: end.toISOString() };
+  }
+  return {};
+}
+
 export default function HomePage() {
-  usePageTitle(null);
+  usePageMeta({ description: "Türkiye'deki hackathon, workshop ve networking etkinliklerini keşfet. Geliştiriciler için tek platform." });
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [type, setType] = useState(searchParams.get("type") === "online" ? "online" : "all");
   const [city, setCity] = useState(searchParams.get("city") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
+  const [dateRange, setDateRange] = useState("all");
+  const [sortBy, setSortBy] = useState("date_asc");
 
-  const rawFilters = useMemo(
-    () => ({ search, type, city, category }),
-    [search, type, city, category],
-  );
+  const rawFilters = useMemo(() => {
+    const dateISO = dateRangeToISO(dateRange);
+    return { search, type, city, category, sortBy, ...dateISO };
+  }, [search, type, city, category, dateRange, sortBy]);
   const debouncedFilters = useDebounce(rawFilters, 300);
   const { data: stats } = useEventStats();
 
@@ -84,6 +107,10 @@ export default function HomePage() {
         onCityChange={setCity}
         category={category}
         onCategoryChange={setCategory}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
       />
 
       <EventList filters={debouncedFilters} pageSize={12} />

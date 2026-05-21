@@ -1,16 +1,56 @@
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AttendeeCount, JoinButton, useEventDetail } from "@features/events";
 import { useAuth } from "@features/auth";
 import { formatDateOnly, formatEventDateRange } from "@features/events/lib/format";
 import { EVENT_STATUS, EVENT_TYPE } from "@lib/constants";
-import { usePageTitle } from "@hooks/usePageTitle";
+import { usePageMeta } from "@hooks/usePageMeta";
+
+function useEventJsonLd(event) {
+  useEffect(() => {
+    if (!event) return;
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name: event.title,
+      description: event.description,
+      startDate: event.startsAt,
+      ...(event.endsAt ? { endDate: event.endsAt } : {}),
+      ...(event.imageURL ? { image: event.imageURL } : {}),
+      url: window.location.href,
+      eventAttendanceMode:
+        event.type === EVENT_TYPE.ONLINE
+          ? "https://schema.org/OnlineEventAttendanceMode"
+          : event.type === EVENT_TYPE.HYBRID
+          ? "https://schema.org/MixedEventAttendanceMode"
+          : "https://schema.org/OfflineEventAttendanceMode",
+      location:
+        event.type === EVENT_TYPE.ONLINE
+          ? { "@type": "VirtualLocation", url: event.onlineUrl || window.location.href }
+          : {
+              "@type": "Place",
+              name: event.locationText || event.city || "Belirtilmedi",
+              address: event.city || undefined,
+            },
+    };
+    script.textContent = JSON.stringify(ld);
+    document.head.appendChild(script);
+    return () => script.remove();
+  }, [event]);
+}
 
 export default function EventDetailPage() {
   const { eventId } = useParams();
   const { user } = useAuth();
   const { data: event, isLoading, isError, error } = useEventDetail(eventId);
 
-  usePageTitle(event?.title ?? null);
+  const desc = event?.description
+    ? event.description.slice(0, 160).replace(/\s+/g, " ").trim()
+    : null;
+  usePageMeta({ title: event?.title ?? null, description: desc, image: event?.imageURL ?? null, type: "event" });
+  useEventJsonLd(event);
 
   if (isLoading) return <EventDetailSkeleton />;
   if (isError) return <p className="text-sm text-red-600">Hata: {error.message}</p>;

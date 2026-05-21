@@ -110,7 +110,7 @@ function MyEventsTab() {
         const isConfirming = confirmingId === event.id;
 
         return (
-          <li key={event.id} className="flex items-center justify-between py-3 gap-4">
+          <li key={event.id} className="flex items-start justify-between py-3 gap-4">
             <div className="min-w-0">
               <Link
                 to={`/events/${event.id}`}
@@ -121,6 +121,11 @@ function MyEventsTab() {
               <p className="text-xs text-gray-500 mt-0.5">
                 {formatEventDate(event.startsAt, { timeTbd: event.timeTbd })}
               </p>
+              {event.status === "rejected" && event.rejectionReason && (
+                <p className="mt-1 text-xs text-zinc-500 italic">
+                  Gerekçe: {event.rejectionReason}
+                </p>
+              )}
             </div>
 
             <div className="flex shrink-0 items-center gap-2">

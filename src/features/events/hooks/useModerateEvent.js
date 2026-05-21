@@ -12,7 +12,7 @@ export function useModerateEvent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ eventId, status }) => setEventStatus(eventId, status),
+    mutationFn: ({ eventId, status, reason }) => setEventStatus(eventId, status, reason),
 
     onMutate: async ({ eventId }) => {
       const key = eventKeys.pending();

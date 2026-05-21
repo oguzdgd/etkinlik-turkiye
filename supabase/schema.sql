@@ -38,7 +38,8 @@ create table if not exists public.events (
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   created_by uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
-  moderated_at timestamptz
+  moderated_at timestamptz,
+  rejection_reason text
 );
 
 -- Mevcut veritabanına sütunları eklemek için (tablo zaten varsa):
@@ -50,6 +51,7 @@ alter table public.events add column if not exists ends_at timestamptz;
 alter table public.events add column if not exists website_url text;
 alter table public.events add column if not exists time_tbd boolean not null default false;
 alter table public.events add column if not exists application_deadline timestamptz;
+alter table public.events add column if not exists rejection_reason text;
 
 -- hybrid tip desteği — mevcut constraint'i drop edip yeniden ekle
 alter table public.events drop constraint if exists events_type_check;

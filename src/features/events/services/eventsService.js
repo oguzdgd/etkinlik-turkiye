@@ -16,9 +16,21 @@ export async function fetchEventsPage({ pageSize = 12, cursor = 0, filters = {} 
     .from(TABLE)
     .select("*")
     .eq("status", EVENT_STATUS.APPROVED)
-    .gte("starts_at", todayISO)
-    .order("starts_at", { ascending: true })
     .range(from, to);
+
+  // Date range — if no explicit dateFrom, default to today
+  const dateFrom = filters.dateFrom ?? todayISO;
+  query = query.gte("starts_at", dateFrom);
+  if (filters.dateTo) query = query.lte("starts_at", filters.dateTo);
+
+  // Sorting
+  if (filters.sortBy === "newest") {
+    query = query.order("created_at", { ascending: false });
+  } else if (filters.sortBy === "date_desc") {
+    query = query.order("starts_at", { ascending: false });
+  } else {
+    query = query.order("starts_at", { ascending: true });
+  }
 
   if (filters.search) query = query.ilike("title", `%${filters.search}%`);
   if (filters.type && filters.type !== "all") query = query.eq("type", filters.type);
@@ -159,12 +171,13 @@ export async function deleteEvent(eventId, uid) {
 
 // Only admins can hit this — the events_protect_immutable trigger on the
 // server raises if a non-admin tries to change status.
-export async function setEventStatus(eventId, status) {
+export async function setEventStatus(eventId, status, reason = null) {
   const { error } = await supabase
     .from(TABLE)
     .update({
       status,
       moderated_at: new Date().toISOString(),
+      rejection_reason: status === "rejected" ? (reason || null) : null,
     })
     .eq("id", eventId);
 
@@ -235,5 +248,6 @@ export function toEvent(row) {
     createdBy: row.created_by,
     createdAt: row.created_at,
     moderatedAt: row.moderated_at,
+    rejectionReason: row.rejection_reason ?? null,
   };
 }

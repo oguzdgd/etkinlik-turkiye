@@ -6,6 +6,19 @@ const TYPE_OPTIONS = [
   { value: EVENT_TYPE.IN_PERSON, label: "Yüz Yüze" },
 ];
 
+const DATE_OPTIONS = [
+  { value: "all", label: "Tüm zamanlar" },
+  { value: "today", label: "Bugün" },
+  { value: "week", label: "Bu Hafta" },
+  { value: "month", label: "Bu Ay" },
+];
+
+const SORT_OPTIONS = [
+  { value: "date_asc", label: "Yaklaşan" },
+  { value: "date_desc", label: "En Uzak" },
+  { value: "newest", label: "En Yeni" },
+];
+
 export default function EventFilters({
   search,
   onSearchChange,
@@ -15,6 +28,10 @@ export default function EventFilters({
   onCityChange,
   category,
   onCategoryChange,
+  dateRange,
+  onDateRangeChange,
+  sortBy,
+  onSortByChange,
 }) {
   return (
     <div className="space-y-3">
@@ -68,22 +85,58 @@ export default function EventFilters({
         </select>
       </div>
 
-      {/* Type pills */}
-      <div className="flex items-center gap-2">
-        {TYPE_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onTypeChange(opt.value)}
-            className={`focus-ring inline-flex h-9 items-center rounded-full px-4 text-[12.5px] font-medium transition-colors
-              ${type === opt.value
-                ? "border border-black bg-black text-white"
-                : "border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 hover:text-zinc-900"
-              }`}
+      {/* Second row: type pills + date pills + sort */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Type pills */}
+        <div className="flex items-center gap-1.5">
+          {TYPE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onTypeChange(opt.value)}
+              className={`focus-ring inline-flex h-9 items-center rounded-full px-4 text-[12.5px] font-medium transition-colors
+                ${type === opt.value
+                  ? "border border-black bg-black text-white"
+                  : "border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 hover:text-zinc-900"
+                }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <span className="h-5 w-px bg-zinc-200" />
+
+        {/* Date pills */}
+        <div className="flex items-center gap-1.5">
+          {DATE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onDateRangeChange(opt.value)}
+              className={`focus-ring inline-flex h-9 items-center rounded-full px-4 text-[12.5px] font-medium transition-colors
+                ${dateRange === opt.value
+                  ? "border border-black bg-black text-white"
+                  : "border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 hover:text-zinc-900"
+                }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Sort dropdown — sağa yasla */}
+        <div className="ml-auto">
+          <select
+            value={sortBy}
+            onChange={(e) => onSortByChange(e.target.value)}
+            className="focus-ring h-9 rounded-full border border-zinc-200 bg-white px-3.5 text-[12.5px] text-zinc-600 transition-colors hover:border-zinc-400 focus:border-zinc-900 focus:outline-none"
           >
-            {opt.label}
-          </button>
-        ))}
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );
