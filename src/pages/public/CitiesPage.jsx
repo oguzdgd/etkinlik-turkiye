@@ -1,20 +1,26 @@
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { CITIES } from "@lib/constants";
 import { usePageTitle } from "@hooks/usePageTitle";
 
-const CITIES = [
-  { name: "İstanbul",  code: "İST", region: "Marmara",      note: "AI, startup ve fintech merkezi" },
-  { name: "Ankara",    code: "ANK", region: "İç Anadolu",    note: "ODTÜ, Bilkent, kamu teknoloji" },
-  { name: "İzmir",     code: "İZM", region: "Ege",           note: "DevOps & veri toplulukları" },
-  { name: "Bursa",     code: "BUR", region: "Marmara",       note: "Üniversite hackathonları" },
-  { name: "Antalya",   code: "AYT", region: "Akdeniz",       note: "Mobil & oyun konferansları" },
-  { name: "Eskişehir", code: "ESK", region: "İç Anadolu",    note: "Anadolu Teknopark merkezli" },
-  { name: "Online",    code: "ONL", region: "Uzaktan",       note: "Discord, Zoom, Twitch" },
-];
+const SORTED_CITIES = [...CITIES].sort((a, b) => {
+  if (a.slug === "online") return -1;
+  if (b.slug === "online") return 1;
+  return a.name.localeCompare(b.name, "tr");
+});
 
-const pad2 = (n) => String(n).padStart(2, "0");
+const IL_COUNT = CITIES.filter((c) => c.slug !== "online").length;
 
 export default function CitiesPage() {
   usePageTitle("Şehirler");
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return SORTED_CITIES;
+    return SORTED_CITIES.filter((c) => c.name.toLowerCase().includes(q));
+  }, [search]);
+
   return (
     <>
       {/* Page header */}
@@ -28,70 +34,63 @@ export default function CitiesPage() {
           </h1>
           <div className="col-span-12 md:col-span-4 md:justify-self-end">
             <div className="tabular display-tight text-[44px] font-light text-zinc-900">
-              {CITIES.length}
+              {IL_COUNT}
             </div>
             <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-zinc-500">
-              aktif şehir
+              il · Online
             </div>
           </div>
         </div>
         <p className="mt-6 max-w-2xl text-[16px] leading-relaxed text-zinc-600">
-          Etkinlikler şehre göre — yerelinizdeki yazılım ve AI buluşmalarını keşfedin,
-          ya da uzaktan katılın.
+          Yaşadığınız şehirdeki yazılım etkinliklerini keşfedin — hackathon, workshop,
+          meetup ve konferanslar.
         </p>
+
+        {/* Search */}
+        <div className="relative mt-8 max-w-sm">
+          <svg
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Şehir ara…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="focus-ring h-11 w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-4 text-[13.5px] placeholder:text-zinc-400 transition-colors hover:border-zinc-300 focus:border-zinc-900 focus:outline-none"
+          />
+        </div>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {CITIES.map((city, i) => {
-          const isOnline = city.name === "Online";
-          const to = isOnline ? "/?type=online" : `/?city=${encodeURIComponent(city.name)}`;
-
-          return (
+      {filtered.length === 0 ? (
+        <p className="text-[14px] text-zinc-500">"{search}" için sonuç bulunamadı.</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {filtered.map((city) => (
             <Link
-              key={city.name}
-              to={to}
-              className="card-hover shadow-card group overflow-hidden rounded-2xl border border-zinc-200 bg-white focus-ring"
+              key={city.slug}
+              to={`/cities/${city.slug}`}
+              className="group flex flex-col rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-400 hover:bg-zinc-50 focus-ring"
             >
-              {/* Cover with code */}
-              <div
-                className={`relative grid h-32 place-items-center text-center
-                  ${isOnline ? "stripe-placeholder-dark text-white" : "stripe-placeholder text-zinc-700"}`}
+              <span className="text-[15px] font-medium tracking-tight text-zinc-900">
+                {city.name}
+              </span>
+              <span className="mt-0.5 text-[12px] text-zinc-400">
+                {city.region}
+              </span>
+              <svg
+                className="mt-3 h-3.5 w-3.5 text-zinc-300 transition-colors group-hover:text-zinc-900"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
               >
-                <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.22em] opacity-70">
-                    {city.region}
-                  </div>
-                  <div className="display-tight mt-1 text-[44px] font-light leading-none">
-                    {city.code}
-                  </div>
-                </div>
-                <span className="absolute left-3 top-3 font-mono text-[10px] uppercase tracking-[0.18em] opacity-50">
-                  {pad2(i + 1)}
-                </span>
-              </div>
-
-              {/* Body */}
-              <div className="p-5">
-                <div className="flex items-baseline justify-between">
-                  <h3 className="text-[20px] font-medium tracking-tight text-zinc-900">
-                    {city.name}
-                  </h3>
-                </div>
-                <p className="mt-1 text-[12.5px] text-zinc-500">{city.note}</p>
-                <div className="mt-4 border-t border-zinc-100 pt-3">
-                  <span className="inline-flex items-center gap-1 text-[12px] font-medium text-zinc-900 opacity-50 transition-opacity group-hover:opacity-100">
-                    Etkinlikleri gör
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </span>
-                </div>
-              </div>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
             </Link>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

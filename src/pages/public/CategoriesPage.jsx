@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { EVENT_CATEGORIES } from "@lib/constants";
+import { EVENT_CATEGORIES, slugify } from "@lib/constants";
 import { usePageTitle } from "@hooks/usePageTitle";
 
 const CATEGORY_META = {
@@ -49,7 +49,7 @@ export default function CategoriesPage() {
           return (
             <Link
               key={cat}
-              to={`/?category=${encodeURIComponent(cat)}`}
+              to={`/categories/${slugify(cat)}`}
               className="group flex min-h-[200px] flex-col bg-white p-7 transition-colors hover:bg-zinc-50 focus-ring"
             >
               <div className="mb-6 flex items-start justify-between">

@@ -3,9 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { EventList, EventFilters, useEventStats } from "@features/events";
 import { useDebounce } from "@hooks/useDebounce";
 import { usePageMeta } from "@hooks/usePageMeta";
-import { EVENT_CATEGORIES } from "@lib/constants";
-
-const CITY_COUNT = 7; // İstanbul, Ankara, İzmir, Bursa, Antalya, Eskişehir + Online
+import { EVENT_CATEGORIES, CITIES } from "@lib/constants";
 
 function dateRangeToISO(range) {
   const now = new Date();
@@ -83,7 +81,7 @@ export default function HomePage() {
               label="Etkinlik"
             />
             <Stat n={EVENT_CATEGORIES.length} label="Kategori" />
-            <Stat n={CITY_COUNT} label="Şehir" />
+            <Stat n={CITIES.length} label="Şehir" />
           </div>
         </div>
       </section>
