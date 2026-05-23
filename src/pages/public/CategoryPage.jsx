@@ -32,8 +32,8 @@ export default function CategoryPage() {
   if (!category) return <Navigate to="/categories" replace />;
 
   return (
-    <div className="space-y-10">
-      <div className="border-b border-zinc-200 pb-8">
+    <div className="space-y-6">
+      <div className="border-b border-zinc-200 pb-5">
         <Link
           to="/categories"
           className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500 hover:text-zinc-900"
@@ -43,10 +43,10 @@ export default function CategoryPage() {
           </svg>
           Kategoriler
         </Link>
-        <h1 className="display-tight mt-4 text-[52px] font-light leading-none text-zinc-900 md:text-[72px]">
+        <h1 className="display-tight mt-2 text-[30px] font-light leading-tight text-zinc-900 md:text-[38px]">
           {category}<span className="text-zinc-400">.</span>
         </h1>
-        <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-500">
+        <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-zinc-500">
           {CATEGORY_DESCRIPTIONS[category]}
         </p>
       </div>

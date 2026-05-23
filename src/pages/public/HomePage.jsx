@@ -44,12 +44,12 @@ export default function HomePage() {
   const { data: stats } = useEventStats();
 
   return (
-    <div className="space-y-10">
-      {/* Hero — tam ekran, negative margin ile container padding'den çıkıyor */}
-      <section className="hero-full-bleed stripe-placeholder-dark relative -mt-8 flex min-h-[500px] flex-col overflow-hidden bg-black text-white">
-        <div className="relative flex flex-1 flex-col justify-between px-8 py-16 md:px-14 md:py-20">
-          {/* Top meta row */}
-          <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">
+    <div className="space-y-6">
+      {/* Compact hero banner */}
+      <section className="hero-full-bleed stripe-placeholder-dark relative -mt-8 overflow-hidden bg-black text-white">
+        <div className="relative px-8 py-8 md:px-14 md:py-10">
+          {/* Meta row */}
+          <div className="mb-3 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">
             <span className="inline-flex items-center gap-2">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inset-0 animate-ping rounded-full bg-white opacity-60" />
@@ -61,40 +61,24 @@ export default function HomePage() {
             <span>Türkiye'nin etkinlik platformu</span>
           </div>
 
-          {/* Main headline */}
-          <div>
-            <h1 className="display-tight max-w-4xl text-[72px] font-light leading-[0.9] md:text-[110px] lg:text-[130px]">
-              Etkinlikleri<br />
-              <span className="font-semibold">Keşfet</span>
-              <span className="text-zinc-600">.</span>
-            </h1>
-            <p className="mt-8 max-w-xl text-[17px] leading-relaxed text-zinc-400">
-              Hackathon'lar, workshop'lar, networking etkinlikleri —
-              geliştiriciler için tek bir yerde.
-            </p>
-          </div>
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 className="display-tight text-[40px] font-light leading-[0.92] md:text-[56px]">
+                Etkinlikleri <span className="font-semibold">Keşfet</span><span className="text-zinc-600">.</span>
+              </h1>
+              <p className="mt-2 text-[13.5px] leading-relaxed text-zinc-400">
+                Hackathon'lar, workshop'lar, networking — geliştiriciler için.
+              </p>
+            </div>
 
-          {/* Bottom stats */}
-          <div className="grid grid-cols-3 gap-8 border-t border-zinc-800 pt-8 sm:max-w-sm">
-            <Stat
-              n={stats ? stats.eventCount : "—"}
-              label="Etkinlik"
-            />
-            <Stat n={EVENT_CATEGORIES.length} label="Kategori" />
-            <Stat n={CITIES.length} label="Şehir" />
+            <div className="flex items-end gap-6 border-t border-zinc-800 pt-5 md:border-0 md:pt-0">
+              <Stat n={stats?.eventCount ?? "—"} label="Etkinlik" />
+              <Stat n={EVENT_CATEGORIES.length} label="Kategori" />
+              <Stat n={CITIES.filter((c) => c.slug !== "online").length} label="İl" />
+            </div>
           </div>
         </div>
       </section>
-
-      {/* Section label */}
-      <div>
-        <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-          ↳ Listeleniyor
-        </div>
-        <h2 className="display-tight text-[28px] font-light text-zinc-900">
-          Yaklaşan etkinlikler<span className="text-zinc-400">.</span>
-        </h2>
-      </div>
 
       <EventFilters
         search={search}
@@ -119,8 +103,8 @@ export default function HomePage() {
 function Stat({ n, label }) {
   return (
     <div>
-      <div className="display-tight tabular text-[36px] font-light">{n}</div>
-      <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+      <div className="display-tight tabular text-[26px] font-light">{n}</div>
+      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
         {label}
       </div>
     </div>

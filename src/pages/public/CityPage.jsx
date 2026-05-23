@@ -40,8 +40,8 @@ export default function CityPage() {
   if (!city) return <Navigate to="/cities" replace />;
 
   return (
-    <div className="space-y-10">
-      <div className="border-b border-zinc-200 pb-8">
+    <div className="space-y-6">
+      <div className="border-b border-zinc-200 pb-5">
         <Link
           to="/cities"
           className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500 hover:text-zinc-900"
@@ -51,17 +51,17 @@ export default function CityPage() {
           </svg>
           Şehirler
         </Link>
-        <div className="mt-4 flex items-end gap-4">
-          <h1 className="display-tight text-[52px] font-light leading-none text-zinc-900 md:text-[72px]">
+        <div className="mt-2 flex items-baseline gap-3">
+          <h1 className="display-tight text-[30px] font-light leading-tight text-zinc-900 md:text-[38px]">
             {city.name}<span className="text-zinc-400">.</span>
           </h1>
           {!isOnline && (
-            <span className="mb-2 font-mono text-[12px] uppercase tracking-[0.16em] text-zinc-400">
+            <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-400">
               {city.region}
             </span>
           )}
         </div>
-        <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-500">
+        <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-zinc-500">
           {isOnline
             ? "Uzaktan katılabileceğin tüm etkinlikler — Discord, Zoom veya canlı yayın."
             : `${city.name} ve çevresindeki yazılım etkinlikleri.`}

@@ -67,16 +67,16 @@ export default function CalendarPage() {
   return (
     <>
       {/* Page header */}
-      <div className="mb-10 border-b border-zinc-200 pb-10">
-        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+      <div className="mb-6 border-b border-zinc-200 pb-6">
+        <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
           ↳ {TR_MONTHS_FULL[month]} {year}
         </div>
         <div className="grid grid-cols-12 items-end gap-4">
-          <h1 className="display-tight col-span-12 text-[56px] font-light leading-[0.92] text-zinc-900 md:col-span-8 md:text-[80px]">
+          <h1 className="display-tight col-span-12 text-[40px] font-light leading-[0.92] text-zinc-900 md:col-span-8 md:text-[52px]">
             Takvim<span className="text-zinc-400">.</span>
           </h1>
           <div className="col-span-12 md:col-span-4 md:justify-self-end">
-            <div className="tabular display-tight text-[44px] font-light text-zinc-900">
+            <div className="tabular display-tight text-[32px] font-light text-zinc-900">
               {isLoading ? "—" : events.length}
             </div>
             <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-zinc-500">
@@ -84,7 +84,7 @@ export default function CalendarPage() {
             </div>
           </div>
         </div>
-        <p className="mt-6 max-w-2xl text-[16px] leading-relaxed text-zinc-600">
+        <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-zinc-600">
           Bu ayın yazılım, AI ve hackathon etkinlikleri. Bir gün seçin, etkinlikler
           sağda görünecek.
         </p>

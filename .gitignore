@@ -27,6 +27,7 @@ pnpm-debug.log*
 # claude code local settings
 CLAUDE.md
 .claude/
+process.md
 
 # playwright mcp — screenshots, console logs, tool artifacts
 .playwright-mcp/

@@ -17,9 +17,13 @@ export const EVENT_TYPE = Object.freeze({
 
 export const EVENT_CATEGORIES = Object.freeze([
   "Hackathon",
-  "AI",
-  "Yazılım",
+  "Konferans",
+  "Meetup",
   "Workshop",
+  "Bootcamp",
+  "Staj",
+  "Yarışma",
+  "AI",
   "Kariyer",
   "Networking",
   "Diğer",
@@ -27,9 +31,13 @@ export const EVENT_CATEGORIES = Object.freeze([
 
 export const CATEGORY_DESCRIPTIONS = Object.freeze({
   Hackathon: "Yarışma formatında yazılım geliştirme — genellikle 24–48 saat kesintisiz kodlama ve sunum",
-  AI: "Yapay zeka, makine öğrenmesi ve büyük dil modeli odaklı etkinlikler",
-  Yazılım: "Genel yazılım geliştirme: programlama dilleri, framework'ler, araçlar ve mimari",
+  Konferans: "Çok konuşmacılı büyük teknik etkinlikler — keynote, panel ve oturumlarla",
+  Meetup: "Topluluk buluşmaları — belirli bir teknoloji veya konu etrafında düzenli toplanmalar",
   Workshop: "Uygulamalı öğrenme — belirli bir konuya odaklanan küçük grup çalışmaları",
+  Bootcamp: "Yoğun ve yapılandırılmış yazılım eğitim programları — genellikle haftalar veya aylar sürer",
+  Staj: "Yazılım ve teknoloji alanında ücretli veya gönüllü staj ve çalışma programları",
+  Yarışma: "Kod, tasarım veya ürün yarışmaları — genellikle ödüllü ve belirli süre sınırlı",
+  AI: "Yapay zeka, makine öğrenmesi ve büyük dil modeli odaklı etkinlikler",
   Kariyer: "İş ilanları, mentorluk, CV hazırlama ve kariyer gelişimi etkinlikleri",
   Networking: "Profesyoneller arası bağlantı kurma ve sosyal buluşmalar",
   Diğer: "Yukarıdaki kategorilere girmeyen teknoloji etkinlikleri",
