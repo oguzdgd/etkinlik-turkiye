@@ -58,11 +58,20 @@ async function fetchMessage(token: string, id: string) {
 }
 
 function extractBody(message: any): string {
-  const decode = (data: string) =>
-    atob(data.replace(/-/g, '+').replace(/_/g, '/'))
+  const decode = (data: string) => {
+    const binary = atob(data.replace(/-/g, '+').replace(/_/g, '/'))
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    return new TextDecoder('utf-8').decode(bytes)
+  }
 
   const stripHtml = (html: string) =>
-    html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    html
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
 
   const findPart = (parts: any[], mime: string): string => {
     for (const part of parts) {
@@ -111,8 +120,8 @@ async function parseWithGroq(subject: string, body: string): Promise<ParsedEvent
 
 Kapsam: Yazılım, teknoloji, yapay zeka, girişimcilik, yatırım, inovasyon, tasarım, veri, siber güvenlik, hackathon, bootcamp, workshop, konferans, meetup, webinar, eğitim programları.
 Kural: Sadece gerçek etkinlikleri çıkar. Etkinlik tarihi olmayan içerikleri atla.
-Kural: starts_at ISO 8601 formatında olmalı (örn: "2026-06-15T18:00:00+03:00"). Tarihi bulamazsan o etkinliği atla.
-Kural: category şunlardan biri: "Yazılım", "Yapay Zeka", "Veri Bilimi", "Siber Güvenlik", "Girişimcilik", "Tasarım", "Diğer"
+Kural: starts_at ISO 8601 formatında olmalı (örn: "2026-06-15T18:00:00+03:00"). Tarih aralığı varsa (örn: 27-28 Haziran) başlangıç tarihini kullan. Tarihi bulamazsan o etkinliği atla.
+Kural: category şunlardan biri: "Hackathon", "Konferans", "Meetup", "Workshop", "Bootcamp", "Staj", "Yarışma", "AI", "Kariyer", "Networking", "Diğer"
 Kural: type "online" veya "in_person" olmalı.
 
 E-posta konusu: ${subject}
@@ -173,6 +182,8 @@ Deno.serve(async () => {
     let inserted = 0
     let skipped = 0
 
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+
     for (const id of messageIds) {
       try {
         const message = await fetchMessage(token, id)
@@ -182,7 +193,20 @@ Deno.serve(async () => {
         const body = extractBody(message)
         if (!body) { skipped++; continue }
 
+        const EVENT_KEYWORDS = [
+          'hackathon', 'meetup', 'workshop', 'konferans', 'webinar',
+          'bootcamp', 'etkinlik', 'event', 'yarışma', 'seminer',
+          'summit', 'forum', 'eğitim', 'training', 'conference',
+        ]
+        const subjectLower = subject.toLowerCase()
+        const bodyPreview = body.slice(0, 500).toLowerCase()
+        const isRelevant = EVENT_KEYWORDS.some(
+          kw => subjectLower.includes(kw) || bodyPreview.includes(kw)
+        )
+        if (!isRelevant) { skipped++; continue }
+
         const events = await parseWithGroq(subject, body)
+        await sleep(2000)
         if (!events || events.length === 0) { skipped++; continue }
 
         for (const event of events) {

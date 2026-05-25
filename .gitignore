@@ -31,3 +31,6 @@ process.md
 
 # playwright mcp — screenshots, console logs, tool artifacts
 .playwright-mcp/
+
+# one-time scripts with credentials
+scripts/get-gmail-token.mjs
