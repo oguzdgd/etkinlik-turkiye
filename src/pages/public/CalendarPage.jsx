@@ -182,7 +182,7 @@ export default function CalendarPage() {
                       {dayEvents.length > 0 && (
                         <div className="mt-1.5 flex flex-wrap gap-1">
                           {dayEvents.slice(0, 4).map((e) => (
-                            <span key={e.id} className={`h-1.5 w-1.5 rounded-full ${isSel ? "bg-white/80" : "bg-zinc-900"}`} />
+                            <span key={e.id} className={`h-1.5 w-1.5 rounded-full ${isSel ? "bg-white/80" : e.timeTbd ? "bg-zinc-400" : "bg-zinc-900"}`} />
                           ))}
                         </div>
                       )}
@@ -205,12 +205,12 @@ export default function CalendarPage() {
               Etkinlik
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-sm bg-black" />
-              Seçili gün
+              <span className="h-1.5 w-1.5 rounded-full bg-zinc-400" />
+              Son Başvuru
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-sm border border-zinc-300" />
-              Bugün
+              <span className="h-3 w-3 rounded-sm bg-black" />
+              Seçili gün
             </span>
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function CalendarPage() {
                         {e.category}
                       </span>
                       <span className="tabular font-mono text-[11px] text-zinc-500">
-                        {fmtTime(e.startsAt)}
+                        {e.timeTbd ? "Son Başvuru" : fmtTime(e.startsAt)}
                       </span>
                     </div>
                     <div className="clamp-2 text-[14px] font-medium leading-snug text-zinc-900">

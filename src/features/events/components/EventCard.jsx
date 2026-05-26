@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Link } from "react-router-dom";
 import { EVENT_TYPE } from "@lib/constants";
-import { formatEventDateRange } from "../lib/format";
+import { formatEventDateRange, formatDeadlineDate } from "../lib/format";
 import { FavoriteButton } from "@features/favorites";
 
 const EventCard = memo(function EventCard({ event }) {
@@ -71,7 +71,21 @@ const EventCard = memo(function EventCard({ event }) {
             <rect x="3.5" y="5" width="17" height="15" rx="2" />
             <path d="M3.5 10h17M8 3v4M16 3v4" />
           </svg>
-          <span className="tabular">{formatEventDateRange(event.startsAt, event.endsAt, { timeTbd: event.timeTbd })}</span>
+          {event.timeTbd ? (
+            <span className="tabular">
+              {event.applicationDeadline
+                ? <>Son Başvuru: {formatDeadlineDate(event.applicationDeadline)}<span className="ml-1.5 text-zinc-400">· Tarih TBD</span></>
+                : "Tarih Duyurulacak"
+              }
+            </span>
+          ) : (
+            <span className="tabular">
+              {formatEventDateRange(event.startsAt, event.endsAt, { timeTbd: false })}
+              {event.applicationDeadline && (
+                <span className="ml-1.5 text-zinc-400">· Başvuru: {formatDeadlineDate(event.applicationDeadline)}</span>
+              )}
+            </span>
+          )}
         </div>
       </div>
     </Link>

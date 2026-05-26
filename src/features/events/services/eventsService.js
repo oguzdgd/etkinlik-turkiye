@@ -202,7 +202,7 @@ export async function fetchEventsForCalendar(year, month) {
 
   const { data, error } = await supabase
     .from(TABLE)
-    .select("id, title, starts_at, type, city, category")
+    .select("id, title, starts_at, ends_at, time_tbd, application_deadline, type, city, category")
     .eq("status", EVENT_STATUS.APPROVED)
     .gte("starts_at", from)
     .lte("starts_at", to)

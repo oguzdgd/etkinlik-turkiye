@@ -28,6 +28,11 @@ export function formatDateOnly(value) {
   return dateOnlyFormatter.format(new Date(value));
 }
 
+export function formatDeadlineDate(value) {
+  if (!value) return "";
+  return dateOnlyFormatter.format(new Date(value));
+}
+
 // Returns a compact range string for multi-day events.
 // If endsAt is null/undefined, falls back to formatEventDate(startsAt).
 export function formatEventDateRange(startsAt, endsAt, { timeTbd = false } = {}) {
