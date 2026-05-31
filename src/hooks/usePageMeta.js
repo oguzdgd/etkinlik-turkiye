@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 
 const SITE_NAME = "Etkinlik Türkiye";
-const SITE_URL = typeof window !== "undefined" ? window.location.origin : "";
 
 function upsertMeta(attr, attrValue, content) {
   if (!content) {

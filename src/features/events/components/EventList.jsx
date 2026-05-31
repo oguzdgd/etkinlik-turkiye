@@ -7,7 +7,6 @@ export default function EventList({ pageSize = 12, filters = {} }) {
     data,
     isLoading,
     isError,
-    error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -25,7 +24,7 @@ export default function EventList({ pageSize = 12, filters = {} }) {
   if (isError) {
     return (
       <p className="text-sm text-red-600">
-        Etkinlikler yüklenemedi: {error.message}
+        Etkinlikler yüklenemedi. Lütfen biraz sonra tekrar deneyin.
       </p>
     );
   }
@@ -45,9 +44,6 @@ export default function EventList({ pageSize = 12, filters = {} }) {
       </div>
     );
   }
-
-  // remaining kept for future use
-  const remaining = hasNextPage ? "+" : 0;
 
   return (
     <div className="space-y-8">

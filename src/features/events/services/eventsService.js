@@ -12,9 +12,12 @@ export async function fetchEventsPage({ pageSize = 12, cursor = 0, filters = {} 
 
   const todayISO = new Date(new Date().toISOString().slice(0, 10)).toISOString();
 
+  // Only the columns EventCard renders — `description` (the heavy import-generated
+  // field) and other detail-only columns are skipped to keep this public,
+  // high-traffic query light. The full row is fetched by fetchEventById on detail.
   let query = supabase
     .from(TABLE)
-    .select("*")
+    .select("id, title, category, type, city, image_url, starts_at, ends_at, time_tbd, application_deadline")
     .eq("status", EVENT_STATUS.APPROVED)
     .range(from, to);
 

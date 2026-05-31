@@ -21,6 +21,7 @@ const EventCard = memo(function EventCard({ event }) {
             src={event.imageURL}
             alt=""
             loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (

@@ -42,7 +42,7 @@ function useEventJsonLd(event) {
 
 export default function EventDetailPage() {
   const { eventId } = useParams();
-  const { data: event, isLoading, isError, error } = useEventDetail(eventId);
+  const { data: event, isLoading, isError } = useEventDetail(eventId);
 
   const desc = event?.description
     ? event.description.slice(0, 160).replace(/\s+/g, " ").trim()
@@ -51,7 +51,7 @@ export default function EventDetailPage() {
   useEventJsonLd(event);
 
   if (isLoading) return <EventDetailSkeleton />;
-  if (isError) return <p className="text-sm text-red-600">Hata: {error.message}</p>;
+  if (isError) return <p className="text-sm text-red-600">Etkinlik yüklenemedi. Lütfen biraz sonra tekrar deneyin.</p>;
   if (!event) {
     return (
       <div className="space-y-3 py-16 text-center">
@@ -162,6 +162,7 @@ export default function EventDetailPage() {
                 src={event.imageURL}
                 alt=""
                 loading="eager"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             ) : (
