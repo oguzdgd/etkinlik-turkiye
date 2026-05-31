@@ -34,3 +34,6 @@ process.md
 
 # one-time scripts with credentials
 scripts/get-gmail-token.mjs
+
+# supabase cli local cache
+supabase/.temp/

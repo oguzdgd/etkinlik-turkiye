@@ -336,8 +336,9 @@ Deno.serve(async () => {
       { headers: { 'Content-Type': 'application/json' } }
     )
   } catch (err) {
+    // Log the detail server-side, but don't leak internals to the caller.
     console.error(err)
-    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+    return new Response(JSON.stringify({ ok: false, error: 'internal error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })

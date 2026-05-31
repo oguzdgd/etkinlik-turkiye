@@ -58,6 +58,22 @@ alter table public.events drop constraint if exists events_type_check;
 alter table public.events add constraint events_type_check
   check (type in ('online', 'in_person', 'hybrid'));
 
+-- URL alanları sadece http(s) olabilir — javascript:/data: gibi şemalarla
+-- stored XSS'i DB seviyesinde engeller. Client validation bypass edilebilir
+-- (anon key public, PostgREST'e doğrudan istek atılabilir) — bu yüzden
+-- defense-in-depth olarak DB'de zorlanır.
+-- NOT: Mevcut veride http(s) olmayan URL varsa bu constraint EKLENMEZ; önce
+-- temizle. Bu yüzden 'not valid' + ayrı validate ile eklenir: yeni/güncellenen
+-- satırlar hemen zorlanır, mevcut satırlar validate adımında kontrol edilir.
+alter table public.events drop constraint if exists events_urls_http;
+alter table public.events add constraint events_urls_http check (
+  (website_url is null or website_url ~* '^https?://')
+  and (online_url is null or online_url ~* '^https?://')
+  and (image_url is null or image_url ~* '^https?://')
+) not valid;
+-- Mevcut satırları da doğrula (ihlal varsa burada hata verir → önce veriyi düzelt):
+alter table public.events validate constraint events_urls_http;
+
 create index if not exists events_status_starts_at_idx
   on public.events(status, starts_at);
 create index if not exists events_status_created_at_idx
@@ -177,13 +193,21 @@ create policy "profiles_select" on public.profiles
     auth.uid() = id or public.is_admin()
   );
 
--- Kullanıcı kendi profilini günceller; role değişimi trigger'da değil
--- politika seviyesinde de korunur (admin promote'u SQL editor üzerinden yapılır).
+-- Kullanıcı kendi profilini günceller. DİKKAT: RLS politikası satır sahipliğini
+-- kontrol eder ama hangi sütunların değiştiğini kısıtlamaz — yani bu politika
+-- tek başına kullanıcının kendi 'role' alanını 'admin' yapmasını engelleyemez.
+-- Privilege escalation'ı önlemek için 'role' sütununda UPDATE yetkisi API
+-- rollerinden (anon/authenticated) tamamen geri alınır (aşağıdaki revoke).
+-- Admin promosyonu zaten SQL editor'dan (postgres rolü) yapılır, etkilenmez.
 drop policy if exists "profiles_update_self" on public.profiles;
 create policy "profiles_update_self" on public.profiles
   for update
   using (auth.uid() = id)
   with check (auth.uid() = id);
+
+-- Column-level hardening: API rolleri 'role' sütununu hiçbir koşulda
+-- güncelleyemez. Defense-in-depth — RLS politikasına güvenmez.
+revoke update (role) on table public.profiles from anon, authenticated;
 
 -- events ----------------------------------------------------------------------
 -- approved → herkes okur (anonim dahil); pending/rejected → sahibi + admin.
@@ -217,10 +241,31 @@ create policy "events_delete" on public.events
   );
 
 -- event_attendees -------------------------------------------------------------
--- Sayaç anonim ziyaretçilere de gösterildiğinden read public.
+-- Katılım listesi gizli: kullanıcı sadece KENDİ katılım satırlarını okur
+-- (isJoined ve "katıldıklarım" için yeterli). Anonim ziyaretçiye gösterilen
+-- sayaç ise aşağıdaki attendee_count() RPC'sinden gelir — böylece kimin
+-- katıldığı (user_id listesi) public olarak sızmaz.
 drop policy if exists "attendees_select_public" on public.event_attendees;
-create policy "attendees_select_public" on public.event_attendees
-  for select using (true);
+drop policy if exists "attendees_select_self" on public.event_attendees;
+create policy "attendees_select_self" on public.event_attendees
+  for select using (auth.uid() = user_id);
+
+-- Public katılımcı sayısı — RLS'i bypass eden security definer fonksiyon.
+-- Sadece toplam sayıyı döndürür, satırları/user_id'leri değil.
+create or replace function public.attendee_count(p_event_id uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select count(*)::int
+  from public.event_attendees
+  where event_id = p_event_id;
+$$;
+
+revoke all on function public.attendee_count(uuid) from public;
+grant execute on function public.attendee_count(uuid) to anon, authenticated;
 
 drop policy if exists "attendees_insert_self" on public.event_attendees;
 create policy "attendees_insert_self" on public.event_attendees
@@ -249,7 +294,19 @@ create policy "favorites_delete_self" on public.favorites
 
 -- AuthContext, profiles tablosunda kendi satırını dinler — admin promote
 -- edildiğinde Navbar/AdminRoute canlı olarak güncellensin diye.
-alter publication supabase_realtime add table public.profiles;
+-- Idempotent: tablo zaten publication üyesiyse tekrar eklemeye çalışma
+-- (aksi halde "already member of publication" hatası tüm transaction'ı geri alır).
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'profiles'
+  ) then
+    alter publication supabase_realtime add table public.profiles;
+  end if;
+end $$;
 
 -- =============================================================================
 -- STORAGE
