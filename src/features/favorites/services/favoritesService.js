@@ -42,7 +42,7 @@ export async function fetchUserFavoriteEvents(uid) {
   return data.map((row) => mapEvent(row.events));
 }
 
-function mapEvent(row) {
+export function mapEvent(row) {
   return {
     id: row.id,
     title: row.title,
