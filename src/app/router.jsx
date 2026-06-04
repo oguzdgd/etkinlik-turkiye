@@ -9,6 +9,19 @@ const lazyPage = (loader) => () => loader().then((m) => ({ Component: m.default 
 
 const router = createBrowserRouter(
   [
+    // Admin panel — renders full-screen, no public navbar/footer.
+    // Must be listed before the pathless MainLayout route so React Router
+    // picks this more-specific match for /admin.
+    {
+      path: "admin",
+      element: <AdminRoute />,
+      errorElement: <RouteError />,
+      children: [
+        { index: true, lazy: lazyPage(() => import("@pages/admin/AdminDashboardPage")) },
+      ],
+    },
+
+    // Public site — every other route wrapped in MainLayout.
     {
       element: <MainLayout />,
       errorElement: <RouteError />,
@@ -34,13 +47,6 @@ const router = createBrowserRouter(
             { path: "profile", lazy: lazyPage(() => import("@pages/user/ProfilePage")) },
             { path: "events/new", lazy: lazyPage(() => import("@pages/events/EventCreatePage")) },
             { path: "events/:eventId/edit", lazy: lazyPage(() => import("@pages/events/EventEditPage")) },
-          ],
-        },
-
-        {
-          element: <AdminRoute />,
-          children: [
-            { path: "admin", lazy: lazyPage(() => import("@pages/admin/AdminDashboardPage")) },
           ],
         },
 
