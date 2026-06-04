@@ -21,10 +21,16 @@ export async function fetchEventsPage({ pageSize = 12, cursor = 0, filters = {} 
     .eq("status", EVENT_STATUS.APPROVED)
     .range(from, to);
 
-  // Date range — if no explicit dateFrom, default to today
-  const dateFrom = filters.dateFrom ?? todayISO;
-  query = query.gte("starts_at", dateFrom);
-  if (filters.dateTo) query = query.lte("starts_at", filters.dateTo);
+  // Date range filter.
+  // Explicit user filter (Bugün/Bu Hafta/Bu Ay pills): filter by starts_at only.
+  // Default (no filter): exclude fully-past events — show if not started yet OR
+  // multi-day and still ongoing (ends_at >= today).
+  if (filters.dateFrom) {
+    query = query.gte("starts_at", filters.dateFrom);
+    if (filters.dateTo) query = query.lte("starts_at", filters.dateTo);
+  } else {
+    query = query.or(`starts_at.gte.${todayISO},ends_at.gte.${todayISO}`);
+  }
 
   // Sorting
   if (filters.sortBy === "newest") {

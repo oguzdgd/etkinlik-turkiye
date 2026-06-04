@@ -96,7 +96,7 @@ export default function LocationPicker({ lat, lng, city, onChange }) {
 
   return (
     <div className="space-y-2">
-      <div className="overflow-hidden rounded-xl border border-zinc-200" style={{ height: 280 }}>
+      <div className="isolate overflow-hidden rounded-xl border border-zinc-200" style={{ height: 280 }}>
         <MapContainer
           center={initialCenter}
           zoom={initialZoom}

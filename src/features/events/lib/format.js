@@ -33,6 +33,14 @@ export function formatDeadlineDate(value) {
   return dateOnlyFormatter.format(new Date(value));
 }
 
+// Determines whether an event is fully in the past.
+// Priority: application_deadline → ends_at → starts_at
+export function isPast(event) {
+  const ref = event.applicationDeadline ?? event.endsAt ?? event.startsAt;
+  if (!ref) return false;
+  return new Date(ref) < new Date();
+}
+
 // Returns a compact range string for multi-day events.
 // If endsAt is null/undefined, falls back to formatEventDate(startsAt).
 export function formatEventDateRange(startsAt, endsAt, { timeTbd = false } = {}) {

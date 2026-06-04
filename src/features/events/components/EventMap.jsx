@@ -38,7 +38,7 @@ export default function EventMap() {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
+    <div className="isolate overflow-hidden rounded-lg border border-gray-200">
       <MapContainer
         center={TURKEY_CENTER}
         zoom={6}
