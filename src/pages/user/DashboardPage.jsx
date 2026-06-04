@@ -4,7 +4,7 @@ import { useAuth } from "@features/auth";
 import { useUserEvents, useUserJoinedEvents, useLeaveEvent, useDeleteEvent } from "@features/events";
 import { useUserFavoriteEvents } from "@features/favorites";
 import { EVENT_STATUS, ROUTES } from "@lib/constants";
-import { formatEventDate } from "@features/events/lib/format";
+import { formatEventDate, isPast } from "@features/events/lib/format";
 
 const TABS = [
   { id: "mine", label: "Etkinliklerim" },
@@ -193,7 +193,38 @@ function FavoritesTab() {
       />
     );
 
-  return <EventRows events={events} />;
+  const upcoming = events.filter((e) => !isPast(e));
+  const past = events.filter((e) => isPast(e));
+
+  return (
+    <div className="space-y-6">
+      {upcoming.length > 0 ? (
+        <EventRows events={upcoming} />
+      ) : (
+        <p className="text-sm text-zinc-400">Yaklaşan favori etkinlik yok.</p>
+      )}
+      {past.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-zinc-400">Geçmiş</p>
+          <ul className="divide-y divide-gray-100">
+            {past.map((event) => (
+              <li key={event.id} className="py-3">
+                <Link
+                  to={`/events/${event.id}`}
+                  className="block text-sm font-medium text-zinc-400 hover:underline"
+                >
+                  {event.title}
+                </Link>
+                <p className="mt-0.5 text-xs text-zinc-300">
+                  {formatEventDate(event.startsAt, { timeTbd: event.timeTbd })}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function JoinedTab() {
@@ -208,12 +239,41 @@ function JoinedTab() {
       />
     );
 
+  const upcoming = events.filter((e) => !isPast(e));
+  const past = events.filter((e) => isPast(e));
+
   return (
-    <ul className="divide-y divide-gray-100">
-      {events.map((event) => (
-        <JoinedEventRow key={event.id} event={event} />
-      ))}
-    </ul>
+    <div className="space-y-6">
+      {upcoming.length > 0 ? (
+        <ul className="divide-y divide-gray-100">
+          {upcoming.map((event) => (
+            <JoinedEventRow key={event.id} event={event} />
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-zinc-400">Yaklaşan etkinlik yok.</p>
+      )}
+      {past.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-zinc-400">Geçmiş</p>
+          <ul className="divide-y divide-gray-100">
+            {past.map((event) => (
+              <li key={event.id} className="py-3">
+                <Link
+                  to={`/events/${event.id}`}
+                  className="block truncate text-sm font-medium text-zinc-400 hover:underline"
+                >
+                  {event.title}
+                </Link>
+                <p className="mt-0.5 text-xs text-zinc-300">
+                  {formatEventDate(event.startsAt, { timeTbd: event.timeTbd })}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 
