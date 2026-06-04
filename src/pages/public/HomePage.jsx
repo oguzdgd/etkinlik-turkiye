@@ -46,7 +46,7 @@ export default function HomePage() {
   return (
     <div className="space-y-6">
       {/* Compact hero banner */}
-      <section className="hero-full-bleed stripe-placeholder-dark relative -mt-8 overflow-hidden bg-black text-white">
+      <section className="stripe-placeholder-dark relative overflow-hidden rounded-2xl bg-black text-white">
         <div className="relative px-8 py-8 md:px-14 md:py-10">
           {/* Meta row */}
           <div className="mb-3 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">

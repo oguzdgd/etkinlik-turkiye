@@ -6,9 +6,9 @@ import { ROUTES } from "@lib/constants";
 
 export default function MainLayout() {
   return (
-    <div className="flex min-h-full flex-col overflow-x-hidden bg-zinc-50 text-zinc-900">
+    <div className="flex min-h-full flex-col overflow-x-clip bg-zinc-50 text-zinc-900">
       <Navbar />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 pt-5 sm:px-8">
         <Suspense fallback={<Spinner />}>
           <Outlet />
         </Suspense>
@@ -54,7 +54,7 @@ function Footer() {
               ],
             },
             {
-              heading: "Şirket",
+              heading: "Platform",
               links: [
                 { label: "Hakkımızda", to: null },
                 { label: "İletişim", to: null },
@@ -81,9 +81,8 @@ function Footer() {
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-between border-t border-zinc-200 py-4 text-[12px] text-zinc-400">
+        <div className="border-t border-zinc-200 py-4 text-[12px] text-zinc-400">
           <span>© 2026 Etkinlik Türkiye</span>
-          <span className="font-mono tracking-[0.16em] uppercase">İST · ANK · İZM</span>
         </div>
       </div>
     </footer>

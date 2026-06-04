@@ -23,31 +23,14 @@ export default function CitiesPage() {
 
   return (
     <>
-      {/* Page header */}
-      <div className="mb-6 border-b border-zinc-200 pb-6">
-        <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-          ↳ Türkiye'de
-        </div>
-        <div className="grid grid-cols-12 items-end gap-4">
-          <h1 className="display-tight col-span-12 text-[40px] font-light leading-[0.92] text-zinc-900 md:col-span-8 md:text-[52px]">
-            Şehirler<span className="text-zinc-400">.</span>
-          </h1>
-          <div className="col-span-12 md:col-span-4 md:justify-self-end">
-            <div className="tabular display-tight text-[32px] font-light text-zinc-900">
-              {IL_COUNT}
-            </div>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-zinc-500">
-              il · Online
-            </div>
-          </div>
-        </div>
-        <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-zinc-600">
-          Yaşadığınız şehirdeki yazılım etkinliklerini keşfedin — hackathon, workshop,
-          meetup ve konferanslar.
-        </p>
+      <div className="mb-4">
+        <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">↳ Türkiye'de</div>
+        <h1 className="display-tight text-[30px] font-normal tracking-tight text-zinc-900">Şehirler</h1>
+      </div>
 
-        {/* Search */}
-        <div className="relative mt-8 max-w-sm">
+      {/* Search */}
+      <div className="mb-6">
+        <div className="relative max-w-sm">
           <svg
             className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
@@ -75,7 +58,7 @@ export default function CitiesPage() {
               to={`/cities/${city.slug}`}
               className="group flex flex-col rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-400 hover:bg-zinc-50 focus-ring"
             >
-              <span className="text-[15px] font-medium tracking-tight text-zinc-900">
+              <span className="text-[15px] font-normal tracking-tight text-zinc-900">
                 {city.name}
               </span>
               <span className="mt-0.5 text-[12px] text-zinc-400">

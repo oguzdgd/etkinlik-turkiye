@@ -22,28 +22,10 @@ export default function CategoriesPage() {
   usePageTitle("Kategoriler");
   return (
     <>
-      {/* Page header */}
-      <div className="mb-6 border-b border-zinc-200 pb-6">
-        <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-          ↳ A–Z
-        </div>
-        <div className="grid grid-cols-12 items-end gap-4">
-          <h1 className="display-tight col-span-12 text-[40px] font-light leading-[0.92] text-zinc-900 md:col-span-8 md:text-[52px]">
-            Kategoriler<span className="text-zinc-400">.</span>
-          </h1>
-          <div className="col-span-12 md:col-span-4 md:justify-self-end">
-            <div className="tabular display-tight text-[32px] font-light text-zinc-900">
-              {EVENT_CATEGORIES.length}
-            </div>
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-zinc-500">
-              kategori
-            </div>
-          </div>
-        </div>
-        <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-zinc-600">
-          Her kategori, o alanda Türkiye'de yaklaşan etkinliklerin tam listesini içerir.
-          Filtrelemek için seçin.
-        </p>
+
+      <div className="mb-4">
+        <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">↳ A–Z</div>
+        <h1 className="display-tight text-[30px] font-normal tracking-tight text-zinc-900">Kategoriler</h1>
       </div>
 
       {/* Grid */}
