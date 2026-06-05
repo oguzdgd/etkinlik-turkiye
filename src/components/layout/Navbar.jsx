@@ -78,6 +78,16 @@ export default function Navbar() {
               </NavLink>
             </div>
           ) : (
+            <>
+              <Link
+                to={ROUTES.EVENT_NEW}
+                className="focus-ring hidden sm:inline-flex items-center gap-1.5 h-9 rounded-lg bg-zinc-900 px-4 text-[13.5px] font-medium text-white transition-colors hover:bg-zinc-700"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Etkinlik Oluştur
+              </Link>
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
@@ -127,6 +137,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+            </>
           )}
 
           {/* Mobile hamburger */}

@@ -193,6 +193,23 @@ export async function setEventStatus(eventId, status, reason = null) {
   if (error) throw error;
 }
 
+// Detailed stats for the admin dashboard — runs parallel count queries.
+export async function fetchAdminStats() {
+  const [approved, pending, rejected, users] = await Promise.all([
+    supabase.from(TABLE).select("*", { count: "exact", head: true }).eq("status", EVENT_STATUS.APPROVED),
+    supabase.from(TABLE).select("*", { count: "exact", head: true }).eq("status", EVENT_STATUS.PENDING),
+    supabase.from(TABLE).select("*", { count: "exact", head: true }).eq("status", EVENT_STATUS.REJECTED),
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+  ]);
+  return {
+    approved: approved.count ?? 0,
+    pending:  pending.count  ?? 0,
+    rejected: rejected.count ?? 0,
+    total:    (approved.count ?? 0) + (pending.count ?? 0) + (rejected.count ?? 0),
+    users:    users.count ?? 0,
+  };
+}
+
 // Lightweight stats for the hero section.
 export async function fetchEventStats() {
   const { count, error } = await supabase

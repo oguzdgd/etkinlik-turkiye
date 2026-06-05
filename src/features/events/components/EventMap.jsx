@@ -31,22 +31,22 @@ export default function EventMap() {
 
   if (isError) {
     return (
-      <div className="flex h-96 items-center justify-center text-sm text-red-600">
+      <div className="flex h-96 items-center justify-center text-sm text-zinc-600">
         Harita yüklenemedi.
       </div>
     );
   }
 
   return (
-    <div className="isolate overflow-hidden rounded-lg border border-gray-200">
+    <div className="isolate overflow-hidden rounded-lg border border-zinc-200">
       <MapContainer
         center={TURKEY_CENTER}
         zoom={6}
         style={{ height: "560px", width: "100%" }}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> katkıcıları'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> katkıcıları &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
         {events.map((event) => (
           <Marker key={event.id} position={[event.lat, event.lng]}>
@@ -62,7 +62,7 @@ export default function EventMap() {
                 </p>
                 <Link
                   to={`/events/${event.id}`}
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs text-zinc-900 underline-offset-2 hover:underline"
                 >
                   Detaya git →
                 </Link>

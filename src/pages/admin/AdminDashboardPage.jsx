@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@features/auth";
+import { useAuth, useUserStats, useRecentUsers, useTopCreators } from "@features/auth";
 import {
   useEventStats,
+  useAdminStats,
   usePendingEvents,
   PendingEventList,
 } from "@features/events";
 import { usePageTitle } from "@hooks/usePageTitle";
 
 const NAV = [
-  { id: "dashboard", label: "Gösterge paneli" },
-  { id: "events",    label: "Etkinlikler" },
-  { id: "settings",  label: "Ayarlar" },
+  { id: "dashboard",  label: "Gösterge paneli" },
+  { id: "events",     label: "Etkinlikler" },
+  { id: "users",      label: "Kullanıcılar" },
+  { id: "settings",   label: "Ayarlar" },
 ];
 
 export default function AdminDashboardPage() {
@@ -19,18 +21,19 @@ export default function AdminDashboardPage() {
   const [section, setSection] = useState("dashboard");
   const { user } = useAuth();
   const { data: stats } = useEventStats();
+  const { data: adminStats } = useAdminStats();
   const { data: pendingEvents = [] } = usePendingEvents();
 
   const initials = user?.displayName
     ? user.displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : (user?.email ?? "—").slice(0, 2).toUpperCase();
 
-  const SECTION_LABEL = { dashboard: "Gösterge paneli", events: "Etkinlikler", settings: "Ayarlar" };
+  const SECTION_LABEL = { dashboard: "Gösterge paneli", events: "Etkinlikler", users: "Kullanıcılar", settings: "Ayarlar" };
 
   return (
     <div
       className="min-h-screen bg-zinc-50"
-      style={{ display: "grid", gridTemplateColumns: "240px 1fr" }}
+      style={{ display: "grid", gridTemplateColumns: "260px 1fr" }}
     >
       {/* ── Sidebar ── */}
       <aside className="bg-zinc-950 text-zinc-300 flex flex-col sticky top-0 h-screen overflow-y-auto">
@@ -80,11 +83,11 @@ export default function AdminDashboardPage() {
       {/* ── Main ── */}
       <div>
         {/* Topbar */}
-        <header className="bg-white border-b border-zinc-200 h-14 px-8 flex items-center justify-between sticky top-0 z-10">
+        <header className="bg-white border-b border-zinc-200 h-16 px-8 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-zinc-400">Admin</span>
+            <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-zinc-500">Admin</span>
             <span className="text-zinc-300">/</span>
-            <span className="text-[13.5px] font-medium tracking-tight text-zinc-900">
+            <span className="text-[15px] font-medium tracking-tight text-zinc-900">
               {SECTION_LABEL[section]}
             </span>
           </div>
@@ -104,15 +107,17 @@ export default function AdminDashboardPage() {
           </div>
         </header>
 
-        <div className="p-8 max-w-[1200px]">
+        <div className="p-8 max-w-[1400px] w-full">
           {section === "dashboard" && (
             <DashboardSection
               stats={stats}
+              adminStats={adminStats}
               pendingEvents={pendingEvents}
               onGoEvents={() => setSection("events")}
             />
           )}
           {section === "events" && <EventsSection />}
+          {section === "users" && <UsersSection />}
           {section === "settings" && <SettingsSection />}
         </div>
       </div>
@@ -122,17 +127,17 @@ export default function AdminDashboardPage() {
 
 /* ── Gösterge Paneli ── */
 
-function DashboardSection({ stats, pendingEvents, onGoEvents }) {
-  const approved = stats?.eventCount ?? 0;
+function DashboardSection({ adminStats, pendingEvents, onGoEvents }) {
+  const s = adminStats;
   const pending = pendingEvents.length;
 
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KPI label="Yayında"       value={approved} sub="Onaylanmış etkinlik" />
-        <KPI label="Onay bekleyen" value={pending}  sub="Moderasyon kuyruğu" highlight={pending > 0} />
-        <KPI label="Toplam"        value={approved + pending} sub="Tüm etkinlikler" />
-        <KPI label="Kategori"      value={11} sub="Aktif kategori" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <KPI label="Toplam"     value={s?.total    ?? "—"} sub="Tüm etkinlikler" />
+        <KPI label="Yayında"    value={s?.approved ?? "—"} sub="Onaylanmış" />
+        <KPI label="Bekleyen"   value={s?.pending  ?? "—"} sub="Moderasyon kuyruğu" highlight={(s?.pending ?? 0) > 0} />
+        <KPI label="Reddedilen" value={s?.rejected ?? "—"} sub="Onaylanmamış" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -227,6 +232,89 @@ function EventsSection() {
   );
 }
 
+/* ── Kullanıcılar ── */
+
+function UsersSection() {
+  const { data: stats } = useUserStats();
+  const { data: recent = [] } = useRecentUsers();
+  const { data: creators = [] } = useTopCreators();
+
+  return (
+    <>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <KPI label="Toplam kullanıcı"    value={stats?.total     ?? "—"} sub="Kayıtlı hesap" />
+        <KPI label="Bu ay yeni"          value={stats?.thisMonth ?? "—"} sub="Bu ay katılanlar" />
+        <KPI label="Etkinlik oluşturan"  value={stats?.creators  ?? "—"} sub="En az 1 etkinlik" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Son kayıt olanlar */}
+        <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-100">
+            <h3 className="text-[14px] font-medium text-zinc-900">Son kayıt olanlar</h3>
+          </div>
+          <ul className="divide-y divide-zinc-100">
+            {recent.length === 0 ? (
+              <li className="px-6 py-8 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">Veri yok</li>
+            ) : recent.map((u) => (
+              <li key={u.id} className="flex items-center gap-3 px-6 py-3">
+                <span className="grid place-items-center w-8 h-8 rounded-full bg-zinc-100 text-zinc-700 font-mono text-[11px] shrink-0">
+                  {(u.display_name || u.email || "?").slice(0, 2).toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-medium text-zinc-900 truncate">
+                    {u.display_name || <span className="text-zinc-400">—</span>}
+                  </div>
+                  <div className="text-[12px] text-zinc-500 truncate">{u.email}</div>
+                </div>
+                <div className="text-right shrink-0">
+                  {u.role === "admin" && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-900 text-white font-mono text-[9.5px] uppercase tracking-[0.14em] mb-1">
+                      admin
+                    </span>
+                  )}
+                  <div className="font-mono text-[10.5px] text-zinc-400">
+                    {new Date(u.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Top oluşturucular */}
+        <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-100">
+            <h3 className="text-[14px] font-medium text-zinc-900">En çok etkinlik oluşturanlar</h3>
+          </div>
+          <ul className="divide-y divide-zinc-100">
+            {creators.length === 0 ? (
+              <li className="px-6 py-8 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">Veri yok</li>
+            ) : creators.map((c, i) => (
+              <li key={c.id} className="flex items-center gap-3 px-6 py-3">
+                <span className="tabular font-mono text-[11px] text-zinc-400 w-5 shrink-0">{i + 1}</span>
+                <span className="grid place-items-center w-8 h-8 rounded-full bg-zinc-100 text-zinc-700 font-mono text-[11px] shrink-0">
+                  {(c.display_name || c.email || "?").slice(0, 2).toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-medium text-zinc-900 truncate">
+                    {c.display_name || <span className="text-zinc-400">—</span>}
+                  </div>
+                  <div className="text-[12px] text-zinc-500 truncate">{c.email}</div>
+                </div>
+                <div className="tabular font-mono text-[13px] font-medium text-zinc-900 shrink-0">
+                  {c.count}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ── Ayarlar ── */
 
 function SettingsSection() {
@@ -294,7 +382,7 @@ function SettingsSection() {
 
 function KPI({ label, value, sub, highlight }) {
   return (
-    <div className={`bg-white border rounded-2xl p-5 ${highlight ? "border-zinc-900" : "border-zinc-200"}`}>
+    <div className={`bg-white border rounded-2xl p-6 ${highlight ? "border-zinc-900" : "border-zinc-200"}`}>
       <div className="font-mono text-[10.5px] tracking-[0.18em] uppercase text-zinc-500">{label}</div>
       <div
         className="mt-3 font-light text-zinc-900 tabular leading-none"

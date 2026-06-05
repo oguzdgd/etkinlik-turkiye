@@ -27,3 +27,4 @@ export { useUserJoinedEvents } from "./hooks/useUserJoinedEvents";
 export { useLeaveEvent } from "./hooks/useLeaveEvent";
 export { useEventsForCalendar } from "./hooks/useEventsForCalendar";
 export { useEventStats } from "./hooks/useEventStats";
+export { useAdminStats } from "./hooks/useAdminStats";

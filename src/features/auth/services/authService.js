@@ -40,3 +40,47 @@ export async function updatePassword({ newPassword }) {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
 }
+
+export async function fetchUserStats() {
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const [total, thisMonth, creatorRows] = await Promise.all([
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", monthStart),
+    supabase.from("events").select("created_by"),
+  ]);
+  const creators = new Set(creatorRows.data?.map((r) => r.created_by)).size;
+  return { total: total.count ?? 0, thisMonth: thisMonth.count ?? 0, creators };
+}
+
+export async function fetchRecentUsers() {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, email, display_name, role, created_at")
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchTopCreators() {
+  const { data: rows, error } = await supabase
+    .from("events")
+    .select("created_by")
+    .not("created_by", "is", null);
+  if (error) throw error;
+
+  const counts = {};
+  rows?.forEach((r) => { counts[r.created_by] = (counts[r.created_by] || 0) + 1; });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (sorted.length === 0) return [];
+
+  const ids = sorted.map(([id]) => id);
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, email, display_name")
+    .in("id", ids);
+
+  return sorted.map(([id, count]) => ({
+    id, count, ...profiles?.find((p) => p.id === id),
+  }));
+}
